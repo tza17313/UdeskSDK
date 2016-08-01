@@ -205,7 +205,7 @@ SDK 咨询对象展示:
     //指定客服
     chat.agent_id = @"2";
     [self.navigationController pushViewController:chat animated:YES];
-###### #客服和客服组ID获取:
+##### 客服和客服组ID获取:
 
 使用管理员登陆Udesk系统
 
