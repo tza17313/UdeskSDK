@@ -205,7 +205,7 @@ SDK 咨询对象展示:
     //指定客服
     chat.agent_id = @"2";
     [self.navigationController pushViewController:chat animated:YES];
-##### 客服和客服组ID获取
+##### 获取客服和客服组ID
 
 使用管理员登陆Udesk系统
 
@@ -256,7 +256,7 @@ UdeskRobotIMViewController *robot = [[UdeskRobotIMViewController alloc] init];
     }];
 指定分配客服或客服组 （请在用户创建成功后调用，参考开源UI）
 
-[获取客服和客服组ID](#客服和客服组ID获取)
+[获取客服和客服组ID](#获取客服和客服组ID)
 
     [UdeskManager assignAgentOrGroup:@"agentId" groupID:@"groupId" completion:^(id responseObject, 		NSError *error) {
             
