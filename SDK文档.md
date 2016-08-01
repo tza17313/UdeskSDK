@@ -196,16 +196,16 @@ SDK 咨询对象展示:
 
 ![udesk](http://7xr0de.com1.z0.glb.clouddn.com/%E5%92%A8%E8%AF%A2%E5%AF%B9%E8%B1%A1.png)
 
-##### **指定分配客服或客服组**（只需要选择一个）
-
-
-    UdeskChatViewController *chat = [[UdeskChatViewController alloc] init];
-    //指定客服组
-    chat.group_id = @"1";
-    //指定客服
-    chat.agent_id = @"2";
-    [self.navigationController pushViewController:chat animated:YES];
-##### **获取客服和客服组ID**
+**指定分配客服或客服组**（只需要选择一个）
+```
+UdeskChatViewController *chat = [[UdeskChatViewController alloc] init];
+ //指定客服组
+chat.group_id = @"1";
+ //指定客服
+chat.agent_id = @"2";
+[self.navigationController pushViewController:chat animated:YES];
+```
+**获取客服和客服组ID**
 
 使用管理员登陆Udesk系统
 
@@ -256,10 +256,8 @@ UdeskRobotIMViewController *robot = [[UdeskRobotIMViewController alloc] init];
     }];
 指定分配客服或客服组 （请在用户创建成功后调用，参考开源UI）
 
-[获取客服和客服组ID](#获取客服和客服组ID)
-
     [UdeskManager assignAgentOrGroup:@"agentId" groupID:@"groupId" completion:^(id responseObject, 		NSError *error) {
-
+      
     }];
 接收消息代理
 
