@@ -205,7 +205,7 @@ SDK 咨询对象展示:
     //指定客服
     chat.agent_id = @"2";
     [self.navigationController pushViewController:chat animated:YES];
-##### 获取客服和客服组ID
+##### **获取客服和客服组ID**
 
 使用管理员登陆Udesk系统
 
@@ -247,7 +247,7 @@ UdeskRobotIMViewController *robot = [[UdeskRobotIMViewController alloc] init];
 获取用户的登录信息接口（请在用户创建成功后调用，参考开源UI）
 
     [UdeskManager getCustomerLoginInfo:^(BOOL success, NSError *error) {
-      
+
     }];
 获取后台分配的客服信息 （请在用户创建成功后调用，参考开源UI）
 
@@ -259,7 +259,7 @@ UdeskRobotIMViewController *robot = [[UdeskRobotIMViewController alloc] init];
 [获取客服和客服组ID](#获取客服和客服组ID)
 
     [UdeskManager assignAgentOrGroup:@"agentId" groupID:@"groupId" completion:^(id responseObject, 		NSError *error) {
-            
+
     }];
 接收消息代理
 
@@ -305,7 +305,7 @@ UdeskRobotIMViewController *robot = [[UdeskRobotIMViewController alloc] init];
 获取机器人URL
 
     [UdeskManager getRobotURL:^(NSURL *robotUrl) {
-      
+
     }];
 
 获取客户本地聊天数据
