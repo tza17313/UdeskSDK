@@ -46,7 +46,7 @@ pod 'UdeskSDK'
 ## 快速集成SDK
 
 #### 1）初始化Udesk，获取密钥和公司域名。
-![udesk](http://7xr0de.com2.z0.glb.qiniucdn.com/ios3.png)
+![udesk](http://7xr0de.com1.z0.glb.clouddn.com/key.jpeg)
 ```
 //初始化Udesk
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
@@ -90,7 +90,7 @@ NSDictionary *parameters = @{
 
 **用户自定义字段：**
 用户自定义字段需要登录Udesk后台，进入“管理中心-用户字段”添加用户自定义字段。
-![udesk](http://7xr0de.com2.z0.glb.qiniucdn.com/ios4.png)
+![udesk](http://7xr0de.com1.z0.glb.clouddn.com/custom.jpeg)
 
 **调用用户自定义字段函数：**
 ```
@@ -257,7 +257,7 @@ UdeskRobotIMViewController *robot = [[UdeskRobotIMViewController alloc] init];
 指定分配客服或客服组 （请在用户创建成功后调用，参考开源UI）
 
     [UdeskManager assignAgentOrGroup:@"agentId" groupID:@"groupId" completion:^(id responseObject, 		NSError *error) {
-      
+
     }];
 接收消息代理
 
