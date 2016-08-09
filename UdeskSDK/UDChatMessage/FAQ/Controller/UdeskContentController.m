@@ -39,9 +39,6 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    //设置导航栏不透明
-    [self.udNavView changeTitle:getUDLocalizedString(@"问题详情")];
-    
     self.view.backgroundColor = [UIColor whiteColor];
     
     CGSize contentTitleSize = [UdeskGeneral.store textSize:self.ArticlesTitle fontOfSize:[UIFont systemFontOfSize:17] ToSize:CGSizeMake(UD_SCREEN_WIDTH, MAXFLOAT)];
@@ -58,36 +55,20 @@
     [self initLoad];
 }
 
+- (void)viewWillAppear:(BOOL)animated {
+
+    [super viewWillAppear:animated];
+    
+    //设置导航栏
+    [self.udNavView changeTitle:getUDLocalizedString(@"问题详情") withChangeTitleColor:UdeskUIConfig.articleContentTitleColor];
+    [self.udNavView setBackgroundColor:UdeskUIConfig.articleContentNavigationColor];
+    [self.udNavView setBackButtonColor:UdeskUIConfig.articleBackButtonColor];
+}
+
 - (void)backButtonAction {
 
     [super backButtonAction];
     [self.navigationController popViewControllerAnimated:YES];
-}
-
-- (void)viewWillAppear:(BOOL)animated {
-    
-    [super viewWillAppear:animated];
-    
-    if (ud_isIOS6) {
-        self.navigationController.navigationBar.tintColor = UdeskUIConfig.articleContentNavigationColor;
-    } else {
-        self.navigationController.navigationBar.barTintColor = UdeskUIConfig.articleContentNavigationColor;
-        self.navigationController.navigationBar.tintColor = UdeskUIConfig.articleBackButtonColor;
-    }
-
-}
-
-
-- (void)viewDidDisappear:(BOOL)animated {
-    
-    [super viewDidDisappear:animated];
-    
-    if (ud_isIOS6) {
-        self.navigationController.navigationBar.tintColor = UdeskUIConfig.oneSelfNavcigtionColor;
-    } else {
-        self.navigationController.navigationBar.barTintColor = UdeskUIConfig.oneSelfNavcigtionColor;
-    }
-    
 }
 
 //加载数据

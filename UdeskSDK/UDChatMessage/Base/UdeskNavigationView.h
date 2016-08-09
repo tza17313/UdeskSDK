@@ -17,8 +17,9 @@
 @property (nonatomic, copy) void (^navigationRightBlcok)();
 
 - (void)showAgentOnlineStatus:(UdeskAgentModel *)agentModel;
-- (void)showRightButtonWithName:(NSString *)name;
-- (void)showNativeNavigationView;
-- (void)changeTitle:(NSString *)title;
+- (void)showRightButtonWithName:(NSString *)name withTextColor:(UIColor *)textColor;
+- (void)changeTitle:(NSString *)title withChangeTitleColor:(UIColor *)titleColor;
+
+- (void)setBackButtonColor:(UIColor *)backButtonColor;
 
 @end

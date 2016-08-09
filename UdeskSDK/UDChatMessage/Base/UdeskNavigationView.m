@@ -37,20 +37,25 @@
         self.backgroundColor = UdeskUIConfig.iMNavigationColor;
         
         CGFloat backButtonY = ud_isIOS6?0:10;
+        CGFloat titleLabelY = ud_isIOS6?0:20;
+        
+        CGRect backButtonFrame = CGRectMake(5, (frame.size.height-30)/2+backButtonY, 60, 30);
+        CGRect titleLabelFrame = CGRectMake(0, titleLabelY, 0, 44);
         //返回按钮
         UIButton *backButton = [UIButton buttonWithType:UIButtonTypeCustom];
-        backButton.frame = CGRectMake(5, (frame.size.height-30)/2+backButtonY, 60, 30);
+        backButton.frame = backButtonFrame;
         [backButton setTitleColor:UdeskUIConfig.iMBackButtonColor forState:UIControlStateNormal];
-        [backButton setImage:[UIImage ud_defaultBackImage] forState:UIControlStateNormal];
+        UIImage *backImage = [UIImage ud_defaultBackImage];
+        backImage = [backImage imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
+        [backButton setImage:backImage forState:UIControlStateNormal];
         [backButton setTitle:@"返回" forState:UIControlStateNormal];
         backButton.contentHorizontalAlignment = UIControlContentHorizontalAlignmentLeft;
         [backButton addTarget:self action:@selector(backAction) forControlEvents:UIControlEventTouchUpInside];
         [self addSubview:backButton];
         _backButton = backButton;
         
-        CGFloat titleLabelY = ud_isIOS6?0:20;
         //标题
-        UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, titleLabelY, 0, 44)];
+        UILabel *titleLabel = [[UILabel alloc] initWithFrame:titleLabelFrame];
         titleLabel.text = getUDLocalizedString(@"会话");
         titleLabel.font = [UIFont systemFontOfSize:18];
         titleLabel.textColor = UdeskUIConfig.iMTitleColor;
@@ -85,7 +90,7 @@
 }
 
 - (void)backAction {
-
+    
     if (self.navigationBackBlcok) {
         self.navigationBackBlcok();
     }
@@ -98,28 +103,20 @@
     }
 }
 
-- (void)showNativeNavigationView {
-
-    self.backgroundColor = [UIColor clearColor];
-    CGFloat agentStatusTitleLength = [[UIScreen mainScreen] bounds].size.width>320?200:170;
-    self.frame = CGRectMake(0, 0, agentStatusTitleLength, 44);
-    
-    self.titleLabel.frame = CGRectMake((200-self.titleLabel.ud_width)/2, 0, self.titleLabel.ud_width, 44);
-    [self.backButton removeFromSuperview];
-}
-
-- (void)changeTitle:(NSString *)title {
+- (void)changeTitle:(NSString *)title withChangeTitleColor:(UIColor *)titleColor {
 
     CGSize titleSize = [UdeskGeneral.store textSize:title fontOfSize:[UIFont systemFontOfSize:18] ToSize:CGSizeMake(self.ud_width, 44)];
     self.titleLabel.ud_x = (self.ud_width-titleSize.width)/2;
     self.titleLabel.ud_width = titleSize.width;
     self.titleLabel.text = title;
+    self.titleLabel.textColor = titleColor;
 }
 
-- (void)showRightButtonWithName:(NSString *)name {
+- (void)showRightButtonWithName:(NSString *)name withTextColor:(UIColor *)textColor {
 
     [self.rightButton setTitle:name forState:UIControlStateNormal];
     self.rightButton.hidden = NO;
+    [self.rightButton setTitleColor:textColor forState:UIControlStateNormal];
 }
 
 - (void)showAgentOnlineStatus:(UdeskAgentModel *)agentModel {
@@ -145,7 +142,6 @@
     }
     
 }
-
 
 //客服上下线改变状态
 - (void)agentOnlineOrNotOnline:(NSString *)statusType {
@@ -195,6 +191,12 @@
     CGRect newframe = _titleLabel.frame;
     newframe.size.height = 30;
     _titleLabel.frame = newframe;
+}
+
+- (void)setBackButtonColor:(UIColor *)backButtonColor {
+    
+    [self.backButton setTitleColor:backButtonColor forState:UIControlStateNormal];
+    [self.backButton setTintColor:backButtonColor];
 }
 
 @end

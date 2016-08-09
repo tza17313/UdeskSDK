@@ -107,31 +107,21 @@ sizeWithAttributes:@{NSFontAttributeName:font}] : CGSizeZero;
     _duration = 1.8;
     CGFloat width = [UIScreen mainScreen].bounds.size.width;
     
-    CGFloat topViewY;
-    if (navView.frame.size.height == 64) {
-        
-        topViewY = 24;
-    }
-    else {
-    
-        topViewY = -40;
-    }
-    
-    [self setFrame:CGRectMake(([UIScreen mainScreen].bounds.size.width - width)*0.5, topViewY, width, 40)];
+    [self setFrame:CGRectMake(([UIScreen mainScreen].bounds.size.width - width)*0.5, -40, width, 40)];
     self.alpha = .9f;
     UIColor *doBtnColor = FlatSkyBlueDark;
     
-    if (agentModel.code.integerValue == 2000) {
+    if (agentModel.code == UDAgentStatusResultOnline) {
         
         self.backgroundColor = FlatGreen;
         doBtnColor = FlatGreenDark;
     }
-    else if (agentModel.code.integerValue == 2001) {
+    else if (agentModel.code == UDAgentStatusResultQueue) {
     
         self.backgroundColor = hsb(204, 76, 86);;
         doBtnColor = FlatSkyBlueDark;
     }
-    else if (agentModel.code.integerValue == 2002) {
+    else if (agentModel.code == UDAgentStatusResultOffline) {
         
         self.backgroundColor = hsb(28, 85, 90);
         doBtnColor = FlatOrangeDark;

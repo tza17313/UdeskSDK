@@ -24,13 +24,11 @@
     [super viewDidLoad];
     
     self.view.backgroundColor = [UIColor whiteColor];
-    
-    [self.udNavView changeTitle:getUDLocalizedString(@"智能机器人对话")];
-    
-    [UdeskManager createServerCustomer:^(id responseObject) {
+
+    [UdeskManager createServerCustomerCompletion:^(BOOL success, NSError *error) {
         
-        if ([[responseObject objectForKey:@"code"] integerValue] == 1000) {
-         
+        if (success) {
+            
             [UdeskManager getRobotURL:^(NSURL *robotUrl) {
                 
                 if (robotUrl) {
@@ -47,13 +45,8 @@
                     
                     if ([UdeskManager supportTransfer]) {
                         
-                        if (self.navigationController.navigationBarHidden) {
-                            [self.udNavView showRightButtonWithName:getUDLocalizedString(@"转人工")];
-                        }
-                        else {
+                        [self.udNavView showRightButtonWithName:getUDLocalizedString(@"转人工") withTextColor:UdeskUIConfig.robotTransferButtonColor];
 
-                            [self transferButton];
-                        }
                     }
                     
                 } else {
@@ -64,12 +57,9 @@
                 }
                 
             }];
-
+            
         }
         
-    } failure:^(NSError *error) {
-        
-        NSLog(@"用户创建失败:%@",error);
     }];
     
     //设置返回按钮文字（在A控制器写代码）
@@ -77,6 +67,16 @@
     barButtonItem.title = @"返回";
     self.navigationItem.backBarButtonItem = barButtonItem;
     
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+
+    [super viewWillAppear:animated];
+    
+    //设置导航栏
+    [self.udNavView changeTitle:getUDLocalizedString(@"智能机器人对话") withChangeTitleColor:UdeskUIConfig.robotTitleColor];
+    [self.udNavView setBackgroundColor:UdeskUIConfig.robotNavigationColor];
+    [self.udNavView setBackButtonColor:UdeskUIConfig.robotBackButtonColor];
 }
 
 - (void)backButtonAction {
@@ -90,31 +90,6 @@
     [super rightButtonAction];
     
     [self transferButtonAction];
-}
-
-- (void)transferButton {
-    
-    //取消按钮
-    UIButton *informationButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    informationButton.frame = CGRectMake(0, 0, 80, 40);
-    informationButton.titleLabel.font = [UIFont systemFontOfSize:16];
-    [informationButton setTitle:getUDLocalizedString(@"转人工") forState:UIControlStateNormal];
-    [informationButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-    [informationButton addTarget:self action:@selector(transferButtonAction) forControlEvents:UIControlEventTouchUpInside];
-    
-    UIBarButtonItem *otherNavigationItem = [[UIBarButtonItem alloc] initWithCustomView:informationButton];
-    
-    UIBarButtonItem *negativeSpacer = [[UIBarButtonItem alloc]
-                                       initWithBarButtonSystemItem:UIBarButtonSystemItemFixedSpace
-                                       target:nil action:nil];
-    
-    // 调整 leftBarButtonItem 在 iOS7 下面的位置
-    if((FUDSystemVersion>=7.0)){
-        
-        negativeSpacer.width = -20;
-        self.navigationItem.rightBarButtonItems = @[negativeSpacer,otherNavigationItem];
-    }else
-        self.navigationItem.rightBarButtonItem = otherNavigationItem;
 }
 
 - (void)transferButtonAction {
@@ -138,29 +113,6 @@
         
     }];
 
-}
-
-- (void)viewWillAppear:(BOOL)animated {
-
-    [super viewWillAppear:animated];
-    
-    if (ud_isIOS6) {
-        self.navigationController.navigationBar.tintColor = UdeskUIConfig.robotNavigationColor;
-    } else {
-        self.navigationController.navigationBar.barTintColor = UdeskUIConfig.robotNavigationColor;
-        self.navigationController.navigationBar.tintColor = UdeskUIConfig.robotBackButtonColor;
-    }
-}
-
-- (void)viewWillDisappear:(BOOL)animated {
-
-    [super viewWillDisappear:animated];
-    
-    if (ud_isIOS6) {
-        self.navigationController.navigationBar.tintColor = UdeskUIConfig.oneSelfNavcigtionColor;
-    } else {
-        self.navigationController.navigationBar.barTintColor = UdeskUIConfig.oneSelfNavcigtionColor;
-    }
 }
 
 - (void)dealloc
