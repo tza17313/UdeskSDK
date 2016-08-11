@@ -26,17 +26,30 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view.
  
+    [self.udNavView changeTitle:getUDLocalizedString(@"常见问题") withColor:UdeskUIConfig.faqTitleColor];
+    [self setBackButtonColor:UdeskUIConfig.faqBackButtonColor];
+    
     [self faqTableViewAndSearch];
     [self requestFAQData];
 }
 
-- (void)viewWillAppear:(BOOL)animated {
-
-    [super viewWillAppear:animated];
+- (void)viewWillDisappear:(BOOL)animated
+{
+    [super viewWillDisappear:animated];
     
-    [self.udNavView changeTitle:getUDLocalizedString(@"常见问题") withChangeTitleColor:UdeskUIConfig.faqTitleColor];
-    [self.udNavView setBackgroundColor:UdeskUIConfig.faqNavigationColor];
-    [self.udNavView setBackButtonColor:UdeskUIConfig.faqBackButtonColor];
+    if (ud_isIOS6) {
+        self.navigationController.navigationBar.tintColor = UdeskUIConfig.oneSelfNavcigtionColor;
+    } else {
+        self.navigationController.navigationBar.barTintColor = UdeskUIConfig.oneSelfNavcigtionColor;
+    }
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+    
+    [super viewWillAppear:animated];
+
+    //设置导航栏颜色
+    [self setNavigationBarBackGroundColor:UdeskUIConfig.faqNavigationColor];
 }
 
 - (void)backButtonAction {

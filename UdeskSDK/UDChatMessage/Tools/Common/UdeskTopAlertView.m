@@ -107,7 +107,17 @@ sizeWithAttributes:@{NSFontAttributeName:font}] : CGSizeZero;
     _duration = 1.8;
     CGFloat width = [UIScreen mainScreen].bounds.size.width;
     
-    [self setFrame:CGRectMake(([UIScreen mainScreen].bounds.size.width - width)*0.5, -40, width, 40)];
+    CGFloat topViewY;
+    if (navView.frame.size.height == 64) {
+        
+        topViewY = 24;
+    }
+    else {
+        
+        topViewY = -40;
+    }
+    
+    [self setFrame:CGRectMake(([UIScreen mainScreen].bounds.size.width - width)*0.5, topViewY, width, 40)];
     self.alpha = .9f;
     UIColor *doBtnColor = FlatSkyBlueDark;
     

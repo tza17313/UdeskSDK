@@ -22,6 +22,9 @@
 {
     [super viewDidLoad];
 
+    [self.udNavView changeTitle:getUDLocalizedString(@"提交问题") withColor:UdeskUIConfig.ticketTitleColor];
+    [self setBackButtonColor:UdeskUIConfig.ticketBackButtonColor];
+    
     self.view.backgroundColor = [UIColor whiteColor];
     
     NSString *key = [UdeskManager key];
@@ -44,14 +47,23 @@
 
 }
 
-- (void)viewWillAppear:(BOOL)animated {
+- (void)viewWillDisappear:(BOOL)animated
+{
+    [super viewWillDisappear:animated];
+    
+    if (ud_isIOS6) {
+        self.navigationController.navigationBar.tintColor = UdeskUIConfig.oneSelfNavcigtionColor;
+    } else {
+        self.navigationController.navigationBar.barTintColor = UdeskUIConfig.oneSelfNavcigtionColor;
+    }
+}
 
+- (void)viewWillAppear:(BOOL)animated {
+    
     [super viewWillAppear:animated];
     
-    //设置导航栏
-    [self.udNavView changeTitle:getUDLocalizedString(@"提交问题") withChangeTitleColor:UdeskUIConfig.ticketTitleColor];
-    [self.udNavView setBackgroundColor:UdeskUIConfig.ticketNavigationColor];
-    [self.udNavView setBackButtonColor:UdeskUIConfig.ticketBackButtonColor];
+    //设置导航栏颜色
+    [self setNavigationBarBackGroundColor:UdeskUIConfig.ticketNavigationColor];
 }
 
 - (void)backButtonAction {

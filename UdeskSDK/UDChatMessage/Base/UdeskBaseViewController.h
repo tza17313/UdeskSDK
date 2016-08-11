@@ -13,9 +13,10 @@
 
 @property (nonatomic, strong)UdeskNavigationView *udNavView;
 
-//@property (nonatomic, strong) UIButton *closeButton;
-
 - (void)backButtonAction;
 - (void)rightButtonAction;
+
+- (void)setBackButtonColor:(UIColor *)color;
+- (void)setNavigationBarBackGroundColor:(UIColor *)color;
 
 @end

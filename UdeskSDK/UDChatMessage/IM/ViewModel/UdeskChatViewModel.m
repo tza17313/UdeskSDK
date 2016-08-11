@@ -632,98 +632,101 @@
 //NSDictionary转model
 - (UdeskMessage *)ud_modelWithDictionary:(NSDictionary *)dbMessage {
     
-    UdeskMessage *message = [[UdeskMessage alloc] init];
-    message.messageFrom = [[dbMessage objectForKey:@"direction"] integerValue];
-    message.messageType = [[dbMessage objectForKey:@"mesType"] integerValue];
-    message.contentId = [dbMessage objectForKey:@"msgid"];
-    message.messageStatus = [[dbMessage objectForKey:@"sendflag"] integerValue];
-    message.timestamp = [[UdeskDateFormatter sharedFormatter].dateFormatter dateFromString:[dbMessage objectForKey:@"replied_at"]];
+    @try {
     
-    NSString *avatar = [dbMessage objectForKey:@"avatar"];
-    if ([avatar isEqual:@0]) {
-        message.agentAvatar = @"";
-    }
-    else {
-        message.agentAvatar = [dbMessage objectForKey:@"avatar"];
-    }
-    
-    NSString *agent_name = [dbMessage objectForKey:@"agent_name"];
-    if ([agent_name isEqual:@0]) {
-        message.agentName = @"";
-    }
-    else {
-        message.agentName = [dbMessage objectForKey:@"agent_name"];
-    }
-    
-    NSString *content = [dbMessage objectForKey:@"content"];
-    
-    switch (message.messageType) {
-        case UDMessageMediaTypeText:
-            message.text = [UdeskTools receiveTextEmoji:content];
-            
-            break;
-        case UDMessageMediaTypePhoto:{
-            
-            message.width = [dbMessage objectForKey:@"width"];
-            message.height = [dbMessage objectForKey:@"height"];
-            message.photoUrl = [dbMessage objectForKey:@"content"];
-            
-        }
-            break;
-        case UDMessageMediaTypeVoice:
-            message.voiceDuration = [dbMessage objectForKey:@"duration"];
-            message.voiceUrl = [dbMessage objectForKey:@"content"];
-            
-            break;
-        case UDMessageMediaTypeRedirect:{
-            
-            message.text = content;
-            
-            break;
-        }
-        case UDMessageMediaTypeRich: {
+        UdeskMessage *message = [[UdeskMessage alloc] init];
+        message.messageFrom = [[dbMessage objectForKey:@"direction"] integerValue];
+        message.messageType = [[dbMessage objectForKey:@"mesType"] integerValue];
+        message.contentId = [dbMessage objectForKey:@"msgid"];
+        message.messageStatus = [[dbMessage objectForKey:@"sendflag"] integerValue];
+        message.timestamp = [[UdeskDateFormatter sharedFormatter].dateFormatter dateFromString:[dbMessage objectForKey:@"replied_at"]];
+        message.agentJid = [dbMessage objectForKey:@"agent_jid"];
         
-            NSData *htmlData = [content dataUsingEncoding:NSUTF8StringEncoding];
-            UdeskHpple *xpathParser = [[UdeskHpple alloc] initWithHTMLData:htmlData];
-            
-            NSArray *dataPArray = [xpathParser searchWithXPathQuery:@"//p"];
-            NSArray *dataAArray = [xpathParser searchWithXPathQuery:@"//a"];
-            
-            for (UdeskHppleElement *happleElement in dataPArray) {
+        NSString *sql = [NSString stringWithFormat:@"select *from Agent where agent_jid='%@'",message.agentJid];
+        
+        NSArray *agentArray = [UdeskManager queryTabelWithSqlString:sql params:nil];
+        
+        NSDictionary *agentDic = agentArray.firstObject;
+        
+        NSString *avatar = [agentDic objectForKey:@"avatar"];
+        NSString *agentName = [agentDic objectForKey:@"agent_name"];
+        
+        message.agentName = agentName;
+        message.agentAvatar = avatar;
+        
+        NSString *content = [dbMessage objectForKey:@"content"];
+        
+        switch (message.messageType) {
+            case UDMessageMediaTypeText:
+                message.text = [UdeskTools receiveTextEmoji:content];
                 
-                if ([UdeskTools isBlankString:message.text]) {
-                    message.text = happleElement.content;
-                }
-                else {
+                break;
+            case UDMessageMediaTypePhoto:{
+                
+                message.width = [dbMessage objectForKey:@"width"];
+                message.height = [dbMessage objectForKey:@"height"];
+                message.photoUrl = [dbMessage objectForKey:@"content"];
+                
+            }
+                break;
+            case UDMessageMediaTypeVoice:
+                message.voiceDuration = [dbMessage objectForKey:@"duration"];
+                message.voiceUrl = [dbMessage objectForKey:@"content"];
+                
+                break;
+            case UDMessageMediaTypeRedirect:{
+                
+                message.text = content;
+                
+                break;
+            }
+            case UDMessageMediaTypeRich: {
+                
+                NSData *htmlData = [content dataUsingEncoding:NSUTF8StringEncoding];
+                UdeskHpple *xpathParser = [[UdeskHpple alloc] initWithHTMLData:htmlData];
+                
+                NSArray *dataPArray = [xpathParser searchWithXPathQuery:@"//p"];
+                NSArray *dataAArray = [xpathParser searchWithXPathQuery:@"//a"];
+                
+                for (UdeskHppleElement *happleElement in dataPArray) {
                     
-                    message.text = [NSString stringWithFormat:@"%@\n",message.text];
-                    message.text = [message.text stringByAppendingString:happleElement.content];
+                    if ([UdeskTools isBlankString:message.text]) {
+                        message.text = happleElement.content;
+                    }
+                    else {
+                        
+                        message.text = [NSString stringWithFormat:@"%@\n",message.text];
+                        message.text = [message.text stringByAppendingString:happleElement.content];
+                    }
+                    
                 }
                 
+                NSMutableDictionary *richURLDictionary = [NSMutableDictionary dictionary];
+                NSMutableArray *richContetnArray = [NSMutableArray array];
+                
+                for (UdeskHppleElement *happleElement in dataAArray) {
+                    
+                    [richURLDictionary setObject:[NSString stringWithFormat:@"%@",happleElement.attributes[@"href"]] forKey:happleElement.content];
+                    [richContetnArray addObject:happleElement.content];
+                    
+                    message.richArray = [NSArray arrayWithArray:richContetnArray];
+                    
+                    message.richURLDictionary = [NSDictionary dictionaryWithDictionary:richURLDictionary];
+                    
+                }
+                
+                break;
             }
-            
-            NSMutableDictionary *richURLDictionary = [NSMutableDictionary dictionary];
-            NSMutableArray *richContetnArray = [NSMutableArray array];
-            
-            for (UdeskHppleElement *happleElement in dataAArray) {
                 
-                [richURLDictionary setObject:[NSString stringWithFormat:@"%@",happleElement.attributes[@"href"]] forKey:happleElement.content];
-                [richContetnArray addObject:happleElement.content];
-                
-                message.richArray = [NSArray arrayWithArray:richContetnArray];
-                
-                message.richURLDictionary = [NSDictionary dictionaryWithDictionary:richURLDictionary];
-                
-            }
-            
-            break;
+            default:
+                break;
         }
-            
-        default:
-            break;
+        
+        return message;
+        
+    } @catch (NSException *exception) {
+    } @finally {
     }
-    
-    return message;
     
 }
 

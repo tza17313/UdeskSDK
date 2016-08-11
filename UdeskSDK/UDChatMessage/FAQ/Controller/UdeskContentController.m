@@ -39,6 +39,9 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+    [self.udNavView changeTitle:getUDLocalizedString(@"问题详情") withColor:UdeskUIConfig.articleContentTitleColor];
+    [self setBackButtonColor:UdeskUIConfig.articleBackButtonColor];
+    
     self.view.backgroundColor = [UIColor whiteColor];
     
     CGSize contentTitleSize = [UdeskGeneral.store textSize:self.ArticlesTitle fontOfSize:[UIFont systemFontOfSize:17] ToSize:CGSizeMake(UD_SCREEN_WIDTH, MAXFLOAT)];
@@ -56,13 +59,23 @@
 }
 
 - (void)viewWillAppear:(BOOL)animated {
-
+    
     [super viewWillAppear:animated];
     
-    //设置导航栏
-    [self.udNavView changeTitle:getUDLocalizedString(@"问题详情") withChangeTitleColor:UdeskUIConfig.articleContentTitleColor];
-    [self.udNavView setBackgroundColor:UdeskUIConfig.articleContentNavigationColor];
-    [self.udNavView setBackButtonColor:UdeskUIConfig.articleBackButtonColor];
+    //设置导航栏颜色
+    [self setNavigationBarBackGroundColor:UdeskUIConfig.articleContentNavigationColor];
+}
+
+- (void)viewDidDisappear:(BOOL)animated {
+    
+    [super viewDidDisappear:animated];
+    
+    if (ud_isIOS6) {
+        self.navigationController.navigationBar.tintColor = UdeskUIConfig.oneSelfNavcigtionColor;
+    } else {
+        self.navigationController.navigationBar.barTintColor = UdeskUIConfig.oneSelfNavcigtionColor;
+    }
+    
 }
 
 - (void)backButtonAction {

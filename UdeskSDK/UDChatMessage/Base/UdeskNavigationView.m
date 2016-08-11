@@ -34,17 +34,12 @@
     self = [super initWithFrame:frame];
     if (self) {
         
-        self.backgroundColor = UdeskUIConfig.iMNavigationColor;
+        self.backgroundColor = [UIColor clearColor];
         
         CGFloat backButtonY = ud_isIOS6?0:10;
-        CGFloat titleLabelY = ud_isIOS6?0:20;
-        
-        CGRect backButtonFrame = CGRectMake(5, (frame.size.height-30)/2+backButtonY, 60, 30);
-        CGRect titleLabelFrame = CGRectMake(0, titleLabelY, 0, 44);
         //返回按钮
         UIButton *backButton = [UIButton buttonWithType:UIButtonTypeCustom];
-        backButton.frame = backButtonFrame;
-        [backButton setTitleColor:UdeskUIConfig.iMBackButtonColor forState:UIControlStateNormal];
+        backButton.frame = CGRectMake(5, (frame.size.height-30)/2+backButtonY, 60, 30);
         UIImage *backImage = [UIImage ud_defaultBackImage];
         backImage = [backImage imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
         [backButton setImage:backImage forState:UIControlStateNormal];
@@ -54,11 +49,11 @@
         [self addSubview:backButton];
         _backButton = backButton;
         
+        CGFloat titleLabelY = ud_isIOS6?0:20;
         //标题
-        UILabel *titleLabel = [[UILabel alloc] initWithFrame:titleLabelFrame];
+        UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, titleLabelY, 0, 44)];
         titleLabel.text = getUDLocalizedString(@"会话");
         titleLabel.font = [UIFont systemFontOfSize:18];
-        titleLabel.textColor = UdeskUIConfig.iMTitleColor;
         titleLabel.textAlignment = NSTextAlignmentCenter;
         titleLabel.backgroundColor = [UIColor clearColor];
         [self addSubview:titleLabel];
@@ -78,7 +73,7 @@
         UIButton *rightButton = [UIButton buttonWithType:UIButtonTypeCustom];
         rightButton.frame = CGRectMake(self.ud_right-70, (frame.size.height-30)/2+backButtonY, 60, 30);
         rightButton.titleLabel.font = [UIFont systemFontOfSize:16];
-        [rightButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+        [rightButton setTitleColor:UdeskUIConfig.robotTransferButtonColor forState:UIControlStateNormal];
         [rightButton addTarget:self action:@selector(rightAction) forControlEvents:UIControlEventTouchUpInside];
         rightButton.hidden = YES;
         [self addSubview:rightButton];
@@ -90,7 +85,7 @@
 }
 
 - (void)backAction {
-    
+
     if (self.navigationBackBlcok) {
         self.navigationBackBlcok();
     }
@@ -103,20 +98,29 @@
     }
 }
 
-- (void)changeTitle:(NSString *)title withChangeTitleColor:(UIColor *)titleColor {
+- (void)showNativeNavigationView {
+
+    self.backgroundColor = [UIColor clearColor];
+    CGFloat agentStatusTitleLength = [[UIScreen mainScreen] bounds].size.width>320?200:170;
+    self.frame = CGRectMake(0, 0, agentStatusTitleLength, 44);
+    
+    self.titleLabel.frame = CGRectMake((200-self.titleLabel.ud_width)/2, 0, self.titleLabel.ud_width, 44);
+    [self.backButton removeFromSuperview];
+}
+
+- (void)changeTitle:(NSString *)title withColor:(UIColor *)color {
 
     CGSize titleSize = [UdeskGeneral.store textSize:title fontOfSize:[UIFont systemFontOfSize:18] ToSize:CGSizeMake(self.ud_width, 44)];
     self.titleLabel.ud_x = (self.ud_width-titleSize.width)/2;
     self.titleLabel.ud_width = titleSize.width;
     self.titleLabel.text = title;
-    self.titleLabel.textColor = titleColor;
+    self.titleLabel.textColor = color;
 }
 
-- (void)showRightButtonWithName:(NSString *)name withTextColor:(UIColor *)textColor {
+- (void)showRightButtonWithName:(NSString *)name {
 
     [self.rightButton setTitle:name forState:UIControlStateNormal];
     self.rightButton.hidden = NO;
-    [self.rightButton setTitleColor:textColor forState:UIControlStateNormal];
 }
 
 - (void)showAgentOnlineStatus:(UdeskAgentModel *)agentModel {
@@ -142,6 +146,7 @@
     }
     
 }
+
 
 //客服上下线改变状态
 - (void)agentOnlineOrNotOnline:(NSString *)statusType {
@@ -193,10 +198,10 @@
     _titleLabel.frame = newframe;
 }
 
-- (void)setBackButtonColor:(UIColor *)backButtonColor {
-    
-    [self.backButton setTitleColor:backButtonColor forState:UIControlStateNormal];
-    [self.backButton setTintColor:backButtonColor];
+- (void)setBackButtonColor:(UIColor *)color {
+
+    [self.backButton setTitleColor:color forState:UIControlStateNormal];
+    [self.backButton setTintColor:color];
 }
 
 @end

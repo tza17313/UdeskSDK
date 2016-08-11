@@ -24,6 +24,9 @@
     [super viewDidLoad];
     
     self.view.backgroundColor = [UIColor whiteColor];
+    
+    [self.udNavView changeTitle:getUDLocalizedString(@"智能机器人对话") withColor:UdeskUIConfig.robotTitleColor];
+    [self setBackButtonColor:UdeskUIConfig.robotBackButtonColor];
 
     [UdeskManager createServerCustomerCompletion:^(BOOL success, NSError *error) {
         
@@ -45,7 +48,13 @@
                     
                     if ([UdeskManager supportTransfer]) {
                         
-                        [self.udNavView showRightButtonWithName:getUDLocalizedString(@"转人工") withTextColor:UdeskUIConfig.robotTransferButtonColor];
+                        if (self.navigationController.navigationBarHidden) {
+                            [self.udNavView showRightButtonWithName:getUDLocalizedString(@"转人工")];
+                        }
+                        else {
+                            
+                            [self transferButton];
+                        }
 
                     }
                     
@@ -69,14 +78,23 @@
     
 }
 
-- (void)viewWillAppear:(BOOL)animated {
 
-    [super viewWillAppear:animated];
+- (void)viewWillAppear:(BOOL)animated {
     
-    //设置导航栏
-    [self.udNavView changeTitle:getUDLocalizedString(@"智能机器人对话") withChangeTitleColor:UdeskUIConfig.robotTitleColor];
-    [self.udNavView setBackgroundColor:UdeskUIConfig.robotNavigationColor];
-    [self.udNavView setBackButtonColor:UdeskUIConfig.robotBackButtonColor];
+    [super viewWillAppear:animated];
+    //设置导航栏颜色
+    [self setNavigationBarBackGroundColor:UdeskUIConfig.robotNavigationColor];
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+    
+    [super viewWillDisappear:animated];
+    
+    if (ud_isIOS6) {
+        self.navigationController.navigationBar.tintColor = UdeskUIConfig.oneSelfNavcigtionColor;
+    } else {
+        self.navigationController.navigationBar.barTintColor = UdeskUIConfig.oneSelfNavcigtionColor;
+    }
 }
 
 - (void)backButtonAction {
@@ -91,6 +109,32 @@
     
     [self transferButtonAction];
 }
+
+- (void)transferButton {
+    
+    //取消按钮
+    UIButton *informationButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    informationButton.frame = CGRectMake(0, 0, 80, 40);
+    informationButton.titleLabel.font = [UIFont systemFontOfSize:16];
+    [informationButton setTitle:getUDLocalizedString(@"转人工") forState:UIControlStateNormal];
+    [informationButton setTitleColor:UdeskUIConfig.robotTransferButtonColor forState:UIControlStateNormal];
+    [informationButton addTarget:self action:@selector(transferButtonAction) forControlEvents:UIControlEventTouchUpInside];
+    
+    UIBarButtonItem *otherNavigationItem = [[UIBarButtonItem alloc] initWithCustomView:informationButton];
+    
+    UIBarButtonItem *negativeSpacer = [[UIBarButtonItem alloc]
+                                       initWithBarButtonSystemItem:UIBarButtonSystemItemFixedSpace
+                                       target:nil action:nil];
+    
+    // 调整 leftBarButtonItem 在 iOS7 下面的位置
+    if((FUDSystemVersion>=7.0)){
+        
+        negativeSpacer.width = -20;
+        self.navigationItem.rightBarButtonItems = @[negativeSpacer,otherNavigationItem];
+    }else
+        self.navigationItem.rightBarButtonItem = otherNavigationItem;
+}
+
 
 - (void)transferButtonAction {
 

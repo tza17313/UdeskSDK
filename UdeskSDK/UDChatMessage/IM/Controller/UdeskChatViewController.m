@@ -66,7 +66,11 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-
+    
+    //设置标题和返回按钮颜色
+    [self.udNavView changeTitle:getUDLocalizedString(@"会话") withColor:UdeskUIConfig.iMTitleColor];
+    [self setBackButtonColor:UdeskUIConfig.iMBackButtonColor];
+    
     //初始化viewModel
     [self initViewModel];
     //初始化消息页面布局
@@ -751,14 +755,10 @@
     
     //监听键盘
     [self subscribeToKeyboard];
-    
+    //设置导航栏颜色
+    [self setNavigationBarBackGroundColor:UdeskUIConfig.iMNavigationColor];
     //设置客户在线
     [UdeskManager setCustomerOnline];
-    
-    //设置导航栏
-    [self.udNavView changeTitle:getUDLocalizedString(@"会话") withChangeTitleColor:UdeskUIConfig.iMTitleColor];
-    [self.udNavView setBackgroundColor:UdeskUIConfig.iMNavigationColor];
-    [self.udNavView setBackButtonColor:UdeskUIConfig.iMBackButtonColor];
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
@@ -770,6 +770,11 @@
     // 停止播放语音
     [[UdeskAudioPlayerHelper shareInstance] stopAudio];
     
+    if (ud_isIOS6) {
+        self.navigationController.navigationBar.tintColor = UdeskUIConfig.oneSelfNavcigtionColor;
+    } else {
+        self.navigationController.navigationBar.barTintColor = UdeskUIConfig.oneSelfNavcigtionColor;
+    }
 }
 
 - (void)didReceiveMemoryWarning {

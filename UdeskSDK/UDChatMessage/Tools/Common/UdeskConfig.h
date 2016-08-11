@@ -104,6 +104,9 @@
 /*** 机器人转人工按钮颜色 */
 @property (nonatomic, strong) UIColor  *robotTransferButtonColor;
 
+/*** 客户app页面导航栏的颜色 */
+@property (nonatomic, strong) UIColor  *oneSelfNavcigtionColor;
+
 + (instancetype)sharedUDConfig;
 
 @end
