@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |spec|
   spec.name         = 'UdeskSDK'
-  spec.version      = '3.2.6'
+  spec.version      = '3.3'
   spec.license      = 'MIT'
   spec.summary      = 'Udesk SDK for iOS'
   spec.homepage     = 'https://github.com/xushichen/UdeskSDK'
@@ -19,7 +19,7 @@ Pod::Spec.new do |spec|
   spec.requires_arc = true
   spec.frameworks = 'AVFoundation', 'CoreTelephony', 'SystemConfiguration', 'MobileCoreServices'
   spec.libraries    = 'z', 'xml2', 'resolv', 'sqlite3'
-  spec.resource     = 'UdeskSDK/Resource/UdeskBundle.bundle'
+  spec.resource     = 'UdeskSDK/UDChatMessage/UDResource/UdeskBundle.bundle'
   spec.vendored_libraries = 'UdeskSDK/SDK/libUdesk.a'
   spec.xcconfig     = {'OTHER_LDFLAGS' => '-ObjC',
                        'HEADER_SEARCH_PATHS' => '$(SDKROOT)/usr/include/libxml2'}
