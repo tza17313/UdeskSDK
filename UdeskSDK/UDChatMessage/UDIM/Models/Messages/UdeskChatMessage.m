@@ -20,7 +20,6 @@
 #import "UdeskImageUtil.h"
 #import <CoreText/CoreText.h>
 #import "UdeskSDKConfig.h"
-#import "UDTTTAttributedLabel.h"
 
 /** 头像距离屏幕水平边沿距离 */
 static CGFloat const kUDAvatarToHorizontalEdgeSpacing = 15.0;
@@ -98,6 +97,13 @@ static const CGFloat kUDAnimationVoiceImageViewHeight    = 17.0f;
             
             self.dateFrame = CGRectMake(0, kUDChatMessageDateLabelY, UD_SCREEN_WIDTH, kUDChatMessageDateCellHeight);
             dateHeight = kUDChatMessageDateCellHeight;
+        }
+        
+        if ([UdeskTools isBlankString:message.messageId]) {
+            return nil;
+        }
+        if ([UdeskTools isBlankString:message.content]) {
+            return nil;
         }
         
         self.date = message.timestamp;
@@ -343,111 +349,65 @@ static const CGFloat kUDAnimationVoiceImageViewHeight    = 17.0f;
 // 计算文本实际的大小
 - (CGSize)neededSizeForText:(NSString *)text {
     
-    //文字最大宽度
-    CGFloat maxLabelWidth = UD_SCREEN_WIDTH>320?235:180;
+    if ([UdeskTools isBlankString:text]) {
+        return CGSizeMake(50, 50);
+    }
     
-    //文字高度
-    CGFloat messageTextHeight = [UdeskStringSizeUtil getHeightForAttributedText:self.cellText textWidth:maxLabelWidth];
-    //判断文字中是否有emoji
-    if ([self stringContainsEmoji:[self.cellText string]]) {
+    CGSize textSize = [UdeskStringSizeUtil getSizeForAttributedText:self.cellText textWidth:UD_SCREEN_WIDTH>320?235:180];
+    
+    if ([UdeskTools stringContainsEmoji:[self.cellText string]]) {
         NSAttributedString *oneLineText = [[NSAttributedString alloc] initWithString:@"haha" attributes:self.cellTextAttributes];
-        CGFloat oneLineTextHeight = [UdeskStringSizeUtil getHeightForAttributedText:oneLineText textWidth:maxLabelWidth];
-        NSInteger textLines = ceil(messageTextHeight / oneLineTextHeight);
-        messageTextHeight += 8 * textLines;
-    }
-    //文字宽度
-    CGFloat messageTextWidth = [UdeskStringSizeUtil getWidthForAttributedText:self.cellText textHeight:messageTextHeight];
-    //#warning 注：这里textLabel的宽度之所以要增加，是因为TTTAttributedLabel的bug，在文字有"."的情况下，有可能显示不出来，开发者可以帮忙定位TTTAttributedLabel的这个bug^.^
-    NSRange periodRange = [self.cellText.string rangeOfString:@"."];
-    if (periodRange.location != NSNotFound) {
-        messageTextWidth += 8;
-    }
-    if (messageTextWidth > maxLabelWidth) {
-        messageTextWidth = maxLabelWidth;
+        CGFloat oneLineTextHeight = [UdeskStringSizeUtil getHeightForAttributedText:oneLineText textWidth:UD_SCREEN_WIDTH>320?235:180];
+        NSInteger textLines = ceil(textSize.height / oneLineTextHeight);
+        textSize.height += 8 * textLines;
     }
     
-    return CGSizeMake(messageTextWidth, messageTextHeight);
-}
-
-- (BOOL)stringContainsEmoji:(NSString *)string
-{
-    __block BOOL returnValue = NO;
-    
-    [string enumerateSubstringsInRange:NSMakeRange(0, [string length])
-                               options:NSStringEnumerationByComposedCharacterSequences
-                            usingBlock:^(NSString *substring, NSRange substringRange, NSRange enclosingRange, BOOL *stop) {
-                                const unichar hs = [substring characterAtIndex:0];
-                                if (0xd800 <= hs && hs <= 0xdbff) {
-                                    if (substring.length > 1) {
-                                        const unichar ls = [substring characterAtIndex:1];
-                                        const int uc = ((hs - 0xd800) * 0x400) + (ls - 0xdc00) + 0x10000;
-                                        if (0x1d000 <= uc && uc <= 0x1f77f) {
-                                            returnValue = YES;
-                                        }
-                                    }
-                                } else if (substring.length > 1) {
-                                    const unichar ls = [substring characterAtIndex:1];
-                                    if (ls == 0x20e3) {
-                                        returnValue = YES;
-                                    }
-                                } else {
-                                    if (0x2100 <= hs && hs <= 0x27ff) {
-                                        returnValue = YES;
-                                    } else if (0x2B05 <= hs && hs <= 0x2b07) {
-                                        returnValue = YES;
-                                    } else if (0x2934 <= hs && hs <= 0x2935) {
-                                        returnValue = YES;
-                                    } else if (0x3297 <= hs && hs <= 0x3299) {
-                                        returnValue = YES;
-                                    } else if (hs == 0xa9 || hs == 0xae || hs == 0x303d || hs == 0x3030 || hs == 0x2b55 || hs == 0x2b1c || hs == 0x2b1b || hs == 0x2b50) {
-                                        returnValue = YES;
-                                    }
-                                }
-                            }];
-    
-    return returnValue;
+    return textSize;
 }
 
 // 计算图片实际大小
 - (CGSize)neededSizeForPhoto:(UIImage *)image {
     
-    CGSize imageSize;
+    CGSize imageSize = CGSizeMake(150, 150);
     
-    CGFloat fixedSize;
-    if (UD_SCREEN_WIDTH>320) {
-        fixedSize = 140;
-    }
-    else {
-        fixedSize = 115;
-    }
-    
-    if (image.size.height > image.size.width) {
+    if (image) {
         
-        CGFloat scale = image.size.height/fixedSize;
-        if (scale!=0) {
-            
-            CGFloat newWidth = (image.size.width)/scale;
-            
-            imageSize = CGSizeMake(newWidth<60.0f?60:newWidth, fixedSize);
+        CGFloat fixedSize;
+        if (UD_SCREEN_WIDTH>320) {
+            fixedSize = 140;
+        }
+        else {
+            fixedSize = 115;
         }
         
-    }
-    else if (image.size.height < image.size.width) {
-        
-        CGFloat scale = image.size.width/fixedSize;
-        
-        if (scale!=0) {
+        if (image.size.height > image.size.width) {
             
-            CGFloat newHeight = (image.size.height)/scale;
-            imageSize = CGSizeMake(fixedSize, newHeight);
+            CGFloat scale = image.size.height/fixedSize;
+            if (scale!=0) {
+                
+                CGFloat newWidth = (image.size.width)/scale;
+                
+                imageSize = CGSizeMake(newWidth<60.0f?60:newWidth, fixedSize);
+            }
+            
         }
-        
+        else if (image.size.height < image.size.width) {
+            
+            CGFloat scale = image.size.width/fixedSize;
+            
+            if (scale!=0) {
+                
+                CGFloat newHeight = (image.size.height)/scale;
+                imageSize = CGSizeMake(fixedSize, newHeight);
+            }
+            
+        }
+        else if (image.size.height == image.size.width) {
+            
+            imageSize = CGSizeMake(fixedSize, fixedSize);
+        }
+   
     }
-    else if (image.size.height == image.size.width) {
-        
-        imageSize = CGSizeMake(fixedSize, fixedSize);
-    }
-    
     // 这里需要缩放后的size
     return imageSize;
 }
@@ -455,23 +415,26 @@ static const CGFloat kUDAnimationVoiceImageViewHeight    = 17.0f;
 // 计算语音实际大小
 - (CGSize)neededSizeForVoiceDuration:(NSString *)voiceDuration {
     // 这里的100只是暂时固定，到时候会根据一个函数来计算
-    CGSize voiceSize;
-    if ([voiceDuration floatValue]) {
-        voiceSize = CGSizeMake(40 + [voiceDuration floatValue]*5, 40.0);
-        if (UD_SCREEN_WIDTH>320) {
-            if (voiceSize.width>325.0f) {
-                voiceSize = CGSizeMake(325.0f, 40.0);
+    CGSize voiceSize = CGSizeMake(50, 40.0);
+    if (voiceDuration.length) {
+        if ([voiceDuration floatValue]) {
+            voiceSize = CGSizeMake(40 + [voiceDuration floatValue]*5, 40.0);
+            if (UD_SCREEN_WIDTH>320) {
+                if (voiceSize.width>325.0f) {
+                    voiceSize = CGSizeMake(325.0f, 40.0);
+                }
+            }
+            else {
+                if (voiceSize.width>180.0f) {
+                    voiceSize = CGSizeMake(180.0f, 40.0);
+                }
             }
         }
         else {
-            if (voiceSize.width>180.0f) {
-                voiceSize = CGSizeMake(180.0f, 40.0);
-            }
+            voiceSize = CGSizeMake(50, 40.0);
         }
     }
-    else {
-        voiceSize = CGSizeMake(50, 40.0);
-    }
+
     return voiceSize;
 }
 
@@ -479,6 +442,10 @@ static const CGFloat kUDAnimationVoiceImageViewHeight    = 17.0f;
 - (instancetype)initWithText:(NSString *)text withDisplayTimestamp:(BOOL)displayTimestamp {
 	
     if (self = [super init]) {
+        
+        if ([UdeskTools isBlankString:text]) {
+            return nil;
+        }
         
         self.displayTimestamp = displayTimestamp;
         CGFloat dateHeight = 10;
@@ -623,6 +590,10 @@ static const CGFloat kUDAnimationVoiceImageViewHeight    = 17.0f;
 //发送文本消息的组件
 - (void)sendedMessageOfText:(NSString *)text withDateHeight:(CGFloat)dateHeight {
 
+    if ([UdeskTools isBlankString:text]) {
+        return;
+    }
+    
     NSMutableDictionary *richURLDictionary = [NSMutableDictionary dictionary];
     NSMutableArray *richContetnArray = [NSMutableArray array];
     
@@ -769,6 +740,9 @@ static const CGFloat kUDAnimationVoiceImageViewHeight    = 17.0f;
 
 - (void)setAttributedCellText:(NSString *)text messageFrom:(UDMessageFromType)messageFrom {
 
+    if ([UdeskTools isBlankString:text]) {
+        return;
+    }
     NSMutableParagraphStyle *contentParagraphStyle = [[NSMutableParagraphStyle alloc] init];
     contentParagraphStyle.lineSpacing = 6.0f;
     contentParagraphStyle.lineHeightMultiple = 1.0f;

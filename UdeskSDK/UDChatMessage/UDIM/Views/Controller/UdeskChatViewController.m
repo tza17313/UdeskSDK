@@ -93,8 +93,12 @@
     [self initilzer];
     
     UIScreenEdgePanGestureRecognizer *popRecognizer = [[UIScreenEdgePanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePopRecognizer:)];
+    popRecognizer.delegate = self;
     popRecognizer.edges = UIRectEdgeLeft;
     [self.view addGestureRecognizer:popRecognizer];
+}
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch{
+    return YES;
 }
 //滑动返回
 - (void)handlePopRecognizer:(UIScreenEdgePanGestureRecognizer*)recognizer {
@@ -124,17 +128,20 @@
 }
 //点击返回
 - (void)dismissChatViewController {
+
     //隐藏键盘
     [self.inputBar.inputTextView resignFirstResponder];
     if (self.sdkConfig.presentingAnimation == UDTransiteAnimationTypePush) {
         if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 7) {
+            
             [self dismissViewControllerAnimated:YES completion:nil];
         } else {
             [self.view.window.layer addAnimation:[UdeskTransitioningAnimation createDismissingTransiteAnimation:self.sdkConfig.presentingAnimation] forKey:nil];
             [self dismissViewControllerAnimated:NO completion:nil];
         }
     } else {
-        [self dismissViewControllerAnimated:YES completion:nil];
+        [self dismissViewControllerAnimated:YES completion:^{
+        }];
     }
     
 }
@@ -252,7 +259,7 @@
 
     UdeskTicketViewController *offLineTicket = [[UdeskTicketViewController alloc] init];
     UdeskSDKShow *show = [[UdeskSDKShow alloc] initWithConfig:_sdkConfig];
-    [show presentOnViewController:self udeskViewController:offLineTicket transiteAnimation:UDTransiteAnimationTypePush];
+    [show presentOnViewController:self udeskViewController:offLineTicket transiteAnimation:UDTransiteAnimationTypePush completion:nil];
 }
 
 //点击黑名单弹窗提示的确定
@@ -264,11 +271,6 @@
 #pragma mark - 初始化视图
 - (void)initilzer {
     
-    // 提示用户允许访问麦克风
-    if (ud_isIOS7) {
-        [[AVAudioSession sharedInstance] requestRecordPermission:^(BOOL granted) {
-        }];
-    }
     // 初始化message tableView
 	_messageTableView = [[UdeskMessageTableView alloc] initWithFrame:self.view.bounds style:UITableViewStylePlain];
     _messageTableView.delegate = self;
@@ -325,10 +327,11 @@
     }
 }
 //点击满意度按钮
-- (void)didSurveyWithMessage:(NSString *)message {
+- (void)didSurveyWithMessage:(NSString *)message hasSurvey:(BOOL)hasSurvey {
 
     self.textViewInputViewType = UDInputViewTypeNormal;
-    [UdeskTopAlertView showAlertType:UDAlertTypeGreen withMessage:message parentView:self.view];
+    [self layoutOtherMenuViewHiden:NO];
+    [UdeskTopAlertView showAlertType:hasSurvey?UDAlertTypeOrange:UDAlertTypeGreen withMessage:message parentView:self.view];
 }
 //点击图片按钮
 - (void)sendImageWithSourceType:(UIImagePickerControllerSourceType)sourceType {
@@ -341,11 +344,10 @@
         }
     };
     [self layoutOtherMenuViewHiden:NO];
-    
     [self.photographyHelper showImagePickerControllerSourceType:sourceType onViewController:self compled:PickerMediaBlock];
 }
 //点击输入框
-- (void)inputTextViewWillBeginEditing:(UdeskMessageTextView *)messageInputTextView {
+- (void)inputTextViewWillBeginEditing:(UdeskTextView *)messageInputTextView {
     self.textViewInputViewType = UDInputViewTypeText;
 }
 //点击inputBar
@@ -363,6 +365,7 @@
     
     id message = [self.chatViewModel objectAtIndexPath:indexPath.row];
     
+    static NSString *unkownCellIdentifier = @"UdeskUnkownCellIdentifier";
     static NSString *chatCellIdentifier = @"UdeskChatMessageCellIdentifier";
     static NSString *tipsCellIdentifier = @"UdeskTipsCellIdentifier";
     static NSString *productCellIdentifier = @"UdeskproductCellIdentifier";
@@ -373,7 +376,6 @@
         
         cell = [tableView dequeueReusableCellWithIdentifier:chatCellIdentifier];
         if (!cell) {
-            
             cell = [[UdeskChatCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:chatCellIdentifier];
             cell.delegate = self;
         }
@@ -384,7 +386,6 @@
     
         cell = [tableView dequeueReusableCellWithIdentifier:tipsCellIdentifier];
         if (!cell) {
-            
             cell = [[UdeskTipsCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:tipsCellIdentifier];
         }
         
@@ -394,12 +395,17 @@
         
         cell = [tableView dequeueReusableCellWithIdentifier:productCellIdentifier];
         if (!cell) {
-            
             cell = [[UdeskProductCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:tipsCellIdentifier];
             cell.delegate = self;
         }
         
         [cell updateCellWithMessage:message];
+    }
+    else {
+        cell = [tableView dequeueReusableCellWithIdentifier:unkownCellIdentifier];
+        if (!cell) {
+            cell = [[UdeskBaseCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:unkownCellIdentifier];
+        }
     }
     
     return cell;
@@ -409,7 +415,12 @@
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
     
     UdeskBaseMessage *message = [self.chatViewModel objectAtIndexPath:indexPath.row];
-    return message.cellHeight;
+    if (message.cellHeight) {        
+        return message.cellHeight;
+    }
+    else {
+        return 0;
+    }
 }
 
 - (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
@@ -508,9 +519,9 @@
 
 #pragma mark - UdeskVoiceRecordViewDelegate
 //完成录音
-- (void)finishRecordedWithVoiceData:(NSData *)voiceData withAudioDuration:(NSString *)duration {
+- (void)finishRecordedWithVoicePath:(NSString *)voicePath withAudioDuration:(NSString *)duration {
 
-    [self didSendMessageWithVoice:voiceData audioDuration:duration];
+    [self didSendMessageWithVoice:voicePath audioDuration:duration];
 }
 //录音时间太短
 - (void)speakDurationTooShort {
@@ -636,10 +647,10 @@
     
 }
 #pragma mark - 发送语音
-- (void)didSendMessageWithVoice:(NSData *)voiceData audioDuration:(NSString*)audioDuration {
+- (void)didSendMessageWithVoice:(NSString *)voicePath audioDuration:(NSString*)audioDuration {
     
     @udWeakify(self);
-    [self.chatViewModel sendAudioMessage:voiceData audioDuration:audioDuration completion:^(UdeskMessage *message, BOOL sendStatus) {
+    [self.chatViewModel sendAudioMessage:voicePath audioDuration:audioDuration completion:^(UdeskMessage *message, BOOL sendStatus) {
         //处理发送结果UI
         @udStrongify(self);
         [self sendMessageStatus:sendStatus message:message];
@@ -694,7 +705,9 @@
 //根据发送状态更新UI
 - (void)sendStatusConfigUI:(BOOL)sendStatus message:(UdeskMessage *)message {
     
-    for (id oldMessage in self.chatViewModel.messageArray) {
+    NSArray *messageArray = self.chatViewModel.messageArray;
+    
+    for (id oldMessage in messageArray) {
         
         if ([oldMessage isKindOfClass:[UdeskChatMessage class]]) {
             
@@ -789,7 +802,7 @@
     //监听键盘
     [self subscribeToKeyboard];
     //设置客户在线
-    [UdeskManager setCustomerOnline];
+    [UdeskManager enterTheSDKPage];
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
@@ -806,6 +819,20 @@
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
+}
+
+-(NSArray *)cellsForTableView:(UITableView *)tableView
+{
+    NSInteger sections = tableView.numberOfSections;
+    NSMutableArray *cells = [[NSMutableArray alloc]  init];
+    for (int section = 0; section < sections; section++) {
+        NSInteger rows =  [tableView numberOfRowsInSection:section];
+        for (int row = 0; row < rows; row++) {
+            NSIndexPath *indexPath = [NSIndexPath indexPathForRow:row inSection:section];
+            [cells addObject:[tableView cellForRowAtIndexPath:indexPath]];
+        }
+    }
+    return cells;
 }
 
 - (void)dealloc {

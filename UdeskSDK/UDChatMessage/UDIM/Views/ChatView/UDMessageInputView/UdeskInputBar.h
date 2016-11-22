@@ -7,9 +7,9 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "UdeskMessageTextView.h"
 #import "UdeskMessageTableView.h"
 #import "UdeskAgent.h"
+#import "UdeskTextView.h"
 
 @protocol UdeskInputBarDelegate <NSObject>
 
@@ -18,7 +18,7 @@
  *
  *  @param messageInputTextView 输入框对象
  */
-- (void)inputTextViewWillBeginEditing:(UdeskMessageTextView *)messageInputTextView;
+- (void)inputTextViewWillBeginEditing:(UdeskTextView *)messageInputTextView;
 
 /**
  *  选择图片
@@ -47,7 +47,7 @@
 /**
  *  评价成功
  */
-- (void)didSurveyWithMessage:(NSString *)message;
+- (void)didSurveyWithMessage:(NSString *)message hasSurvey:(BOOL)hasSurvey;
 
 @end
 
@@ -55,7 +55,7 @@
 
 @property (nonatomic, strong) UdeskAgent *agent;
 
-@property (nonatomic, strong) UdeskMessageTextView *inputTextView;//输入框
+@property (nonatomic, strong) UdeskTextView *inputTextView;//输入框
 
 @property (nonatomic, weak) id <UdeskInputBarDelegate> delegate;
 

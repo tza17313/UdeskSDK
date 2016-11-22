@@ -15,6 +15,8 @@
 #import "UdeskTools.h"
 #import "UdeskAgentSurvey.h"
 #import "UdeskUtils.h"
+#import <AVFoundation/AVFoundation.h>
+#import<AssetsLibrary/ALAssetsLibrary.h>
 
 /** 按钮大小 */
 static CGFloat const InputBarViewButtonDiameter = 30.0;
@@ -101,8 +103,10 @@ static CGFloat const InputBarViewButtonToVerticalEdgeSpacing = 45.0;
     [self addSubview:lineView];
     
     //初始化输入框
-    _inputTextView = [[UdeskMessageTextView  alloc] initWithFrame:CGRectMake(InputBarViewToHorizontalEdgeSpacing, InputBarViewToVerticalEdgeSpacing, UD_SCREEN_WIDTH-InputBarViewToHorizontalEdgeSpacing*2, InputBarViewHeight)];
+    _inputTextView = [[UdeskTextView  alloc] initWithFrame:CGRectMake(InputBarViewToHorizontalEdgeSpacing, InputBarViewToVerticalEdgeSpacing, UD_SCREEN_WIDTH-InputBarViewToHorizontalEdgeSpacing*2, InputBarViewHeight)];
+    _inputTextView.placeholder = getUDLocalizedString(@"udesk_typing");
     _inputTextView.delegate = self;
+    _inputTextView.font = [UIFont systemFontOfSize:16];
     _inputTextView.backgroundColor = [UdeskSDKConfig sharedConfig].sdkStyle.textViewColor;
     self.backgroundColor = [UdeskSDKConfig sharedConfig].sdkStyle.inputViewColor;
     
@@ -140,13 +144,11 @@ static CGFloat const InputBarViewButtonToVerticalEdgeSpacing = 45.0;
     [albumButton addTarget:self action:@selector(albumButton:) forControlEvents:UIControlEventTouchUpInside];
     [self addSubview:albumButton];
     
-    //评价(后期做)
-    /*
+    //评价
      surveyButton = [self createButtonWithImage:[UIImage ud_defaultSurveyImage] HLImage:[UIImage ud_defaultSurveyHighlightedImage]];
      surveyButton.frame = CGRectMake(albumButton.ud_right+InputBarViewButtonToHorizontalEdgeSpacing, InputBarViewButtonToVerticalEdgeSpacing, InputBarViewButtonDiameter, InputBarViewButtonDiameter);
      [surveyButton addTarget:self action:@selector(surveyButton:) forControlEvents:UIControlEventTouchUpInside];
      [self addSubview:surveyButton];
-     */
 }
 
 //点击表情按钮
@@ -163,12 +165,42 @@ static CGFloat const InputBarViewButtonToVerticalEdgeSpacing = 45.0;
 
 //点击语音
 - (void)voiceClick:(UIButton *)button {
-
-    //检查客服状态
-    if ([self checkAgentStatusValid]) {
-        button.selected = !button.selected;
-        if ([self.delegate respondsToSelector:@selector(didSelectVoiceButton:)]) {
-            [self.delegate didSelectVoiceButton:button.selected];
+    
+    if (ud_isIOS7)
+    {
+    
+        [[AVAudioSession sharedInstance] requestRecordPermission:^(BOOL granted) {
+            if (granted) {
+                // 用户同意获取数据
+                //检查客服状态
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    if ([self checkAgentStatusValid]) {
+                        button.selected = !button.selected;
+                        if ([self.delegate respondsToSelector:@selector(didSelectVoiceButton:)]) {
+                            [self.delegate didSelectVoiceButton:button.selected];
+                        }
+                    }
+                });
+                
+            } else {
+                // 可以显示一个提示框告诉用户这个app没有得到允许？
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [[[UIAlertView alloc] initWithTitle:nil
+                                                message:getUDLocalizedString(@"udesk_microphone_denied")
+                                               delegate:nil
+                                      cancelButtonTitle:getUDLocalizedString(@"udesk_close")
+                                      otherButtonTitles:nil] show];
+                });
+                
+            }
+        }];
+    }
+    else {
+        if ([self checkAgentStatusValid]) {
+            button.selected = !button.selected;
+            if ([self.delegate respondsToSelector:@selector(didSelectVoiceButton:)]) {
+                [self.delegate didSelectVoiceButton:button.selected];
+            }
         }
     }
 }
@@ -188,29 +220,85 @@ static CGFloat const InputBarViewButtonToVerticalEdgeSpacing = 45.0;
 //点击相册按钮
 - (void)albumButton:(UIButton *)button {
 
-    //检查客服状态
-    if ([self checkAgentStatusValid]) {
-        if ([self.delegate respondsToSelector:@selector(sendImageWithSourceType:)]) {
-            [self.delegate sendImageWithSourceType:UIImagePickerControllerSourceTypePhotoLibrary];
+    if ([ALAssetsLibrary authorizationStatus] == ALAuthorizationStatusNotDetermined) {
+        
+        ALAssetsLibrary *assetsLibrary = [[ALAssetsLibrary alloc] init];
+        
+        [assetsLibrary enumerateGroupsWithTypes:ALAssetsGroupAll usingBlock:^(ALAssetsGroup *group, BOOL *stop) {
+            
+            if (*stop) {
+                //点击“好”回调方法
+                //检查客服状态
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    if ([self checkAgentStatusValid]) {
+                        if ([self.delegate respondsToSelector:@selector(sendImageWithSourceType:)]) {
+                            [self.delegate sendImageWithSourceType:UIImagePickerControllerSourceTypePhotoLibrary];
+                        }
+                    }
+                });
+                return;
+            }
+            *stop = TRUE;
+            
+        } failureBlock:^(NSError *error) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [[[UIAlertView alloc] initWithTitle:nil
+                                            message:getUDLocalizedString(@"udesk_album_denied")
+                                           delegate:nil
+                                  cancelButtonTitle:getUDLocalizedString(@"udesk_close")
+                                  otherButtonTitles:nil] show];
+            });
+        }];
+    }
+    else if ([ALAssetsLibrary authorizationStatus] == ALAuthorizationStatusAuthorized) {
+        
+        if ([self checkAgentStatusValid]) {
+            if ([self.delegate respondsToSelector:@selector(sendImageWithSourceType:)]) {
+                [self.delegate sendImageWithSourceType:UIImagePickerControllerSourceTypePhotoLibrary];
+            }
         }
+    }
+    else if([ALAssetsLibrary authorizationStatus] == ALAuthorizationStatusDenied){
+    
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [[[UIAlertView alloc] initWithTitle:nil
+                                        message:getUDLocalizedString(@"udesk_album_denied")
+                                       delegate:nil
+                              cancelButtonTitle:getUDLocalizedString(@"udesk_close")
+                              otherButtonTitles:nil] show];
+        });
     }
     
 }
 
+//点击评价
 - (void)surveyButton:(UIButton *)button {
 
     //检查客服状态
     if ([self checkAgentStatusValid]) {
         
         if (self.agent.agentId) {
-            [UdeskAgentSurvey.store showAgentSurveyAlertViewWithAgentId:self.agent.agentId completion:^{
-                
-                //评价提交成功Alert
-                if ([self.delegate respondsToSelector:@selector(didSurveyWithMessage:)]) {
-                    [self.delegate didSurveyWithMessage:getUDLocalizedString(@"udesk_top_view_thanks_evaluation")];
-                    button.selected = !button.selected;
+            
+            [UdeskAgentSurvey.store checkHasSurveyWithAgentId:self.agent.agentId completion:^(NSString *hasSurvey) {
+               
+                if (![hasSurvey boolValue]) {
+            
+                    [UdeskAgentSurvey.store showAgentSurveyAlertViewWithAgentId:self.agent.agentId completion:^{
+                        
+                        //评价提交成功Alert
+                        if ([self.delegate respondsToSelector:@selector(didSurveyWithMessage:hasSurvey:)]) {
+                            [self.delegate didSurveyWithMessage:getUDLocalizedString(@"udesk_top_view_thanks_evaluation") hasSurvey:NO];
+                            button.selected = !button.selected;
+                        }
+                    }];
                 }
+                else {
+                
+                    [self.delegate didSurveyWithMessage:getUDLocalizedString(@"udesk_has_survey")  hasSurvey:YES];
+                }
+                
             }];
+            
         }
     }
 }

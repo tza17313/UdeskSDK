@@ -13,14 +13,11 @@
 
 + (CGSize)textSize:(NSString *)text withFont:(UIFont *)font withSize:(CGSize)size;
 
-+ (float)getAttributedStringHeightWithString:(NSString *)text
-                                  WidthValue:(float)width
-                                        font:(UIFont*)font;
-
 + (CGFloat)getHeightForAttributedText:(NSAttributedString *)attributedText
                             textWidth:(CGFloat)textWidth;
 
-+ (CGFloat)getWidthForAttributedText:(NSAttributedString *)attributedText
-                          textHeight:(CGFloat)textHeight;
++ (CGSize)getSizeForAttributedText:(NSAttributedString *)attributedText
+                         textWidth:(CGFloat)textWidth;
+
 
 @end
