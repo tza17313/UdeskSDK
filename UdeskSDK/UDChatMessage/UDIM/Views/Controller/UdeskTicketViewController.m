@@ -58,29 +58,35 @@
     
     if (![UdeskTools isBlankString:key]||[UdeskTools isBlankString:domain]) {
         
-        _ticketWebView = [[UIWebView alloc] initWithFrame:self.view.bounds];
+        CGRect webViewRect = self.navigationController.navigationBarHidden?CGRectMake(0, 64, UD_SCREEN_WIDTH, UD_SCREEN_HEIGHT-64):self.view.bounds;
+        _ticketWebView = [[UIWebView alloc] initWithFrame:webViewRect];
         _ticketWebView.backgroundColor = [UIColor whiteColor];
-        
-        NSURL *ticketURL = [UdeskManager getSubmitTicketURL];
-        
-        //设置语言
-        NSString *tmp = [[NSUserDefaults standardUserDefaults] objectForKey:LANGUAGE_SET];
-        //默认是中文
-        if (!tmp)
-        {
-            tmp = CNS;
+
+        NSURL *ticketURL = nil;
+        if (self.urlStr) {
+            ticketURL = [NSURL URLWithString:self.urlStr];
+        }else{
+            ticketURL =  [UdeskManager getSubmitTicketURL];
+           // 设置语言
+            NSString *tmp = [[NSUserDefaults standardUserDefaults] objectForKey:LANGUAGE_SET];
+           // 默认是中文
+            if (!tmp)
+            {
+                tmp = CNS;
+            }
+    
+            NSString *language;
+            if ([tmp isEqualToString:CNS]) {
+                language = @"&language=zh-cn";
+            }
+            else {
+                language = @"&language=en-us";
+            }
+            
+            ticketURL = [NSURL URLWithString:[ticketURL.absoluteString stringByAppendingString:language]];
         }
-        
-        NSString *language;
-        if ([tmp isEqualToString:CNS]) {
-            language = @"&language=zh-cn";
-        }
-        else {
-            language = @"&language=en-us";
-        }
-        
-        ticketURL = [NSURL URLWithString:[ticketURL.absoluteString stringByAppendingString:language]];
-        
+
+
         [_ticketWebView loadRequest:[NSURLRequest requestWithURL:ticketURL]];
         
         [self.view addSubview:_ticketWebView];
@@ -151,5 +157,12 @@
 {
     NSLog(@"%@销毁了",[self class]);
 }
+
+
+#pragma mark - 留言自定义url重写getter
+//- (NSString *)urlStr
+//{
+//    return @"https://www.baidu.com";
+//}
 
 @end
