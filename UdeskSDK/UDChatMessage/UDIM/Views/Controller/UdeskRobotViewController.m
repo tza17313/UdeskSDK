@@ -16,11 +16,15 @@
 #import "UdeskUtils.h"
 #import "UdeskLanguageTool.h"
 #import "UdeskSDKManager.h"
+#import "UDStatus.h"
 
 @interface UdeskRobotViewController ()
 
 @property (nonatomic, strong) UdeskSDKConfig *sdkConfig;
 @property (nonatomic, strong) NSURL *robotURL;
+
+
+@property (nonatomic, strong) UIWebView *sbWebView;
 
 @end
 
@@ -35,11 +39,21 @@
         
         if (success) {
     
-            //这个函数只有在createServerCustomerCompletion回调成功之后才有用
-            if (![UdeskManager supportTransfer]) {
-                self.navigationItem.rightBarButtonItems = nil;
+            if (self.status) {
+                if ([UDStatus shareInstance].enable_agent) {
+
+                }else{
+                    self.navigationItem.rightBarButtonItems = nil;
+                }
+            }else{
+                //这个函数只有在createServerCustomerCompletion回调成功之后才有用
+                if (![UdeskManager supportTransfer]) {
+                    self.navigationItem.rightBarButtonItems = nil;
+                }
+
             }
-            
+
+
             CGRect webViewRect = self.navigationController.navigationBarHidden?CGRectMake(0, 64, UD_SCREEN_WIDTH, UD_SCREEN_HEIGHT-64):self.view.bounds;
             UIWebView *intelligenceWeb = [[UIWebView alloc] initWithFrame:webViewRect];
             intelligenceWeb.backgroundColor=[UIColor whiteColor];
@@ -50,7 +64,8 @@
             [intelligenceWeb loadRequest:request];
             
             [self.view addSubview:intelligenceWeb];
-            
+
+            self.sbWebView = intelligenceWeb;
         }
         else {
         
@@ -121,16 +136,35 @@
 
 - (void)didSelectNavigationRightButton {
     
-    if (_sdkConfig.transferToMenu) {
-        UdeskSDKManager *sdk = [[UdeskSDKManager alloc] initWithSDKStyle:_sdkConfig.sdkStyle];
-        [sdk pushUdeskViewControllerWithType:UdeskMenu viewController:self completion:nil];
+
+    if (self.status) {
+
+        if ([UDStatus shareInstance].enable_im_group) {
+            
+            UdeskSDKManager *sdk = [[UdeskSDKManager alloc] initWithSDKStyle:_sdkConfig.sdkStyle];
+            [sdk pushUdeskViewControllerWithType:UdeskMenu viewController:self completion:nil];
+        }else{
+            UdeskSDKManager *chatViewManager = [[UdeskSDKManager alloc] initWithSDKStyle:_sdkConfig.sdkStyle];
+            [chatViewManager pushUdeskViewControllerWithType:UdeskIM viewController:self completion:^{
+            }];
+        }
+
+
+    }else{
+        if (_sdkConfig.transferToMenu) {
+            UdeskSDKManager *sdk = [[UdeskSDKManager alloc] initWithSDKStyle:_sdkConfig.sdkStyle];
+            [sdk pushUdeskViewControllerWithType:UdeskMenu viewController:self completion:nil];
+        }
+        else {
+
+            UdeskSDKManager *chatViewManager = [[UdeskSDKManager alloc] initWithSDKStyle:_sdkConfig.sdkStyle];
+            [chatViewManager pushUdeskViewControllerWithType:UdeskIM viewController:self completion:^{
+            }];
+        }
     }
-    else {
-        
-        UdeskSDKManager *chatViewManager = [[UdeskSDKManager alloc] initWithSDKStyle:_sdkConfig.sdkStyle];
-        [chatViewManager pushUdeskViewControllerWithType:UdeskIM viewController:self completion:^{
-        }];
-    }
+
 }
+
+
 
 @end

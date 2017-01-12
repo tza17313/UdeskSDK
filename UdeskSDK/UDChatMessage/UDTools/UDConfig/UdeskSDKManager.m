@@ -18,6 +18,7 @@
 #import "UdeskManager.h"
 #import "UdeskSDKShow.h"
 
+
 @implementation UdeskSDKManager{
     UdeskChatViewController *chatViewController;
     UdeskRobotViewController *robotChat;
@@ -45,39 +46,119 @@
     return self;
 }
 
+- (void)pushUdeskViewControllerWith:(UIViewController *)viewController
+                         completion:(void (^)(void))completion {
+
+    [[UDStatus shareInstance] requestData:^(NSInteger type, UDStatus *status) {
+
+        if (type) {
+
+            if ([UDStatus shareInstance].in_session) {
+                //推到聊天页面
+                [self presentIMController:viewController transiteAnimation:UDTransiteAnimationTypePush completion:completion];
+                return;
+            }
+
+//            if ([UDStatus shareInstance].enable_sdk_robot) {
+//                [self robotStatusViewController:viewController Type:UDTransiteAnimationTypePush stustu:status completion:completion];
+//                return;
+//            }
+
+            if ([UDStatus shareInstance].enable_im_group) {
+                [self presentMenuController:viewController transiteAnimation:UDTransiteAnimationTypePush completion:completion];
+                return;
+            }
+            //推到聊天页面
+            [self presentIMController:viewController transiteAnimation:UDTransiteAnimationTypePush completion:completion];
+
+        } else {
+            //推到聊天页面
+            [self presentIMController:viewController transiteAnimation:UDTransiteAnimationTypePush completion:completion];
+            NSLog(@"没有传APPID或者版本不支持");
+        }
+    }];
+}
+
 - (void)pushUdeskViewControllerWithType:(UdeskType)type
                          viewController:(UIViewController *)viewController
                              completion:(void (^)(void))completion {
 
-    if (_sdkConfig) {
-        _sdkConfig = [UdeskSDKConfig sharedConfig];
+            if (type == UdeskRobot) {
+              //推到机器人页面
+            [self presentRobotController:viewController transiteAnimation:UDTransiteAnimationTypePush completion:completion];
+
+            }
+            else if(type == UdeskIM) {
+
+                //推到聊天页面
+                [self presentIMController:viewController transiteAnimation:UDTransiteAnimationTypePush completion:completion];
+            }
+            else if(type == UdeskFAQ) {
+
+                //推到帮助中心页面
+                [self presentFAQController:viewController transiteAnimation:UDTransiteAnimationTypePush completion:completion];
+            }
+            else if (type == UdeskMenu) {
+
+                //推到客服导航栏页面
+                [self presentMenuController:viewController transiteAnimation:UDTransiteAnimationTypePush completion:completion];
+            }
+            else if (type == UdeskTicket) {
+                
+                //推到留言页面
+                [self presentTicketController:viewController transiteAnimation:UDTransiteAnimationTypePush completion:completion];
+            }
+
+}
+
+- (void)robotStatusViewController:(UIViewController *)viewController Type:(UDTransiteAnimationType)type stustu:(UDStatus *)status
+                       completion:(void (^)(void))completion
+{
+
+    if (![[UDStatus shareInstance].robot isEqualToString:@""]) {
+
+        robotChat = [[UdeskRobotViewController alloc] initWithSDKConfig:_sdkConfig withURL:[UdeskManager getRobotAppendUrl]];
+        robotChat.status = status;
+
+        [_show presentOnViewController:viewController udeskViewController:robotChat transiteAnimation:type completion:completion];
+
+    }else{
+        //没有机器人直接进入聊天页面
+        [self presentIMController:viewController transiteAnimation:type completion:completion];
     }
-    
-    if (type == UdeskRobot) {
-        
-        //推到机器人页面
-        [self presentRobotController:viewController transiteAnimation:UDTransiteAnimationTypePush completion:completion];
-    }
-    else if(type == UdeskIM) {
-    
-        //推到聊天页面
-        [self presentIMController:viewController transiteAnimation:UDTransiteAnimationTypePush completion:completion];
-    }
-    else if(type == UdeskFAQ) {
-        
-        //推到帮助中心页面
-        [self presentFAQController:viewController transiteAnimation:UDTransiteAnimationTypePush completion:completion];
-    }
-    else if (type == UdeskMenu) {
-        
-        //推到客服导航栏页面
-        [self presentMenuController:viewController transiteAnimation:UDTransiteAnimationTypePush completion:completion];
-    }
-    else if (type == UdeskTicket) {
-    
-        //推到留言页面
-        [self presentTicketController:viewController transiteAnimation:UDTransiteAnimationTypePush completion:completion];
-    }
+}
+
+- (void)presentUdeskViewControllerWith:(UIViewController *)viewController
+                            completion:(void (^)(void))completion {
+
+    [[UDStatus shareInstance] requestData:^(NSInteger type, UDStatus *status) {
+
+        if (type) {
+
+            if ([UDStatus shareInstance].in_session) {
+                //推到聊天页面
+                [self presentIMController:viewController transiteAnimation:UDTransiteAnimationTypePresent completion:completion];
+                return;
+            }
+
+            if ([UDStatus shareInstance].enable_robot) {
+                [self robotStatusViewController:viewController Type:UDTransiteAnimationTypePresent stustu:status completion:completion];
+                return;
+            }
+
+            if ([UDStatus shareInstance].enable_im_group) {
+                [self presentMenuController:viewController transiteAnimation:UDTransiteAnimationTypePresent completion:completion];
+                return;
+            }
+            //推到聊天页面
+            [self presentIMController:viewController transiteAnimation:UDTransiteAnimationTypePresent completion:completion];
+
+        } else {
+            //推到聊天页面
+            [self presentIMController:viewController transiteAnimation:UDTransiteAnimationTypePresent completion:completion];
+            NSLog(@"没有传APPID或者版本不支持");
+        }
+    }];
 }
 
 - (void)presentUdeskViewControllerWithType:(UdeskType)type
@@ -150,6 +231,7 @@
             if (robotUrl) {
                 
                 if (!robotChat) {
+
                     robotChat = [[UdeskRobotViewController alloc] initWithSDKConfig:_sdkConfig withURL:robotUrl];
                 }
                 
@@ -328,6 +410,30 @@
     _sdkConfig.url = url;
 }
 
+- (void)setGroupName:(NSString *)name
+{
+    _sdkConfig.name = name;
+}
 
+/**
+ * 设置排队放弃类型
+ */
+- (void)setQuitQueueType:(Quit_queueType)type {
+
+    if (type == UdeskCannel_mark) {
+        [[NSUserDefaults standardUserDefaults] setObject:@"cannel_mark" forKey:@"Quit_queueType"];
+
+    } else if (type == UdeskMark) {
+        [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"Quit_queueType"];
+    } else if (type == UdeskForce_quit) {
+        [[NSUserDefaults standardUserDefaults] setObject:@"force_quit" forKey:@"Quit_queueType"];
+    }
+    [[NSUserDefaults standardUserDefaults] synchronize];
+}
+
++ (void)delUserDef
+{
+    [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"Quit_queueType"];
+}
 
 @end

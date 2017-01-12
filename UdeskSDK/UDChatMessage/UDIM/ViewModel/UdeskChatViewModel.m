@@ -61,7 +61,7 @@
         //获取db消息
         [self requestDataBaseMessageContent];
         //创建用户
-        [self createCustomer];
+       // [self createCustomer];
         //网络监测
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(reachabilityChanged:) name:kUdeskReachabilityChangedNotification object:nil];
         self.reachability  = [UdeskReachability reachabilityWithHostName:@"www.baidu.com"];

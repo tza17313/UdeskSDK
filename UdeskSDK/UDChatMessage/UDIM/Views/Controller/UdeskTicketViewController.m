@@ -14,6 +14,7 @@
 #import "UdeskSDKConfig.h"
 #import "UdeskTransitioningAnimation.h"
 #import "UdeskLanguageTool.h"
+#import "UDStatus.h"
 
 @interface UdeskTicketViewController () 
 

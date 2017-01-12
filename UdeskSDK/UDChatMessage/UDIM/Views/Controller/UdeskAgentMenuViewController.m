@@ -188,8 +188,14 @@
     
     //获取点击菜单选项的子集
     UdeskAgentMenuModel *didSelectModel = self.agentMenuData[indexPath.row];
-    
-    if (didSelectModel.group_id.length > 0|| !didSelectModel.group_id) {
+
+
+    if ([didSelectModel.group_id isKindOfClass:[NSNumber class]]) {
+        NSLog(@"ttt");
+        didSelectModel.group_id = [NSString stringWithFormat:@"%@",didSelectModel.group_id];
+    }
+
+    if (didSelectModel.group_id.length > 0 || !didSelectModel.group_id) {
         
         UdeskSDKManager *chatViewManager = [[UdeskSDKManager alloc] initWithSDKStyle:_sdkConfig.sdkStyle];
         [chatViewManager setScheduledGroupId:didSelectModel.group_id];

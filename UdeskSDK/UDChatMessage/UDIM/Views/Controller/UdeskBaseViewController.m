@@ -37,6 +37,8 @@
     if( ([[[UIDevice currentDevice] systemVersion] doubleValue]>=7.0)) {
         self.navigationController.navigationBar.translucent = NO;
     }
+
+    self.edgesForExtendedLayout = UIRectEdgeNone;
 }
 
 - (void)addGesture

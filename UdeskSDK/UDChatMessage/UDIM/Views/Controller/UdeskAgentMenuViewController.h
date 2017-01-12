@@ -7,7 +7,6 @@
 //
 
 #import "UdeskBaseViewController.h"
-#import "UdeskSDKConfig.h"
 
 @interface UdeskAgentMenuViewController : UdeskBaseViewController
 

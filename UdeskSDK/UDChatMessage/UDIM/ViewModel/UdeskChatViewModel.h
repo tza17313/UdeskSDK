@@ -60,6 +60,7 @@
 /** ViewModel代理 */
 @property (nonatomic, weak           ) id <UdeskChatViewModelDelegate> delegate;
 
+- (void)createCustomer;
 
 /**
  *  加载更多DB消息

@@ -48,7 +48,9 @@
 
 @end
 
+
 @interface UdeskManager : NSObject
+
 
 /**
  *  初始化Udesk，必须调用此函数，请正确填写参数。
@@ -346,5 +348,11 @@
  @return yes/no
  */
 + (BOOL)customersAreSession;
+
+/**
+ * 返回拼接的机器人URL
+ */
++ (NSURL *)getRobotAppendUrl;
+
 
 @end

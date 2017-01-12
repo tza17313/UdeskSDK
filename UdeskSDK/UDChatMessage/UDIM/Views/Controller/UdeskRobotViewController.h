@@ -7,10 +7,12 @@
 //
 
 #import "UdeskBaseViewController.h"
-#import "UdeskSDKConfig.h"
+#import "UDStatus.h"
 
 @interface UdeskRobotViewController : UdeskBaseViewController
 
 - (instancetype)initWithSDKConfig:(UdeskSDKConfig *)config withURL:(NSURL *)URL;
+
+@property (nonatomic, strong) UDStatus *status;
 
 @end

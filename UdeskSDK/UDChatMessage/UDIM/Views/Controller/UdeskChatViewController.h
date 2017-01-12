@@ -7,9 +7,11 @@
 //
 
 #import "UdeskBaseViewController.h"
-#import "UdeskSDKConfig.h"
 
+@class UDStatus;
 @interface UdeskChatViewController : UdeskBaseViewController
+
+@property (nonatomic, strong) UDStatus *status;
 
 - (instancetype)initWithSDKConfig:(UdeskSDKConfig *)config;
 

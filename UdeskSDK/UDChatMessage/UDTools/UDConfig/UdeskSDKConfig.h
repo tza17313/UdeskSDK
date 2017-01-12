@@ -20,7 +20,12 @@ typedef NS_ENUM(NSUInteger, UDTransiteAnimationType) {
 
 @interface UdeskSDKConfig : NSObject
 
+@property (nonatomic, copy) NSString *hasRobot;
+
 @property (nonatomic, strong) UdeskSDKStyle *sdkStyle;
+
+/** 组来源 */
+@property (nonatomic, copy) NSString *name;
 
 /** im标题 */
 @property (nonatomic, copy  ) NSString *url;
