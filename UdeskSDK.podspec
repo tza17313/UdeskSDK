@@ -14,7 +14,7 @@ Pod::Spec.new do |spec|
   spec.homepage     = 'https://github.com/xushichen/UdeskSDK'
   spec.author       = {'xuchen ' => 'xuc@udesk.cn'}
   spec.source       =  {:git => 'https://github.com/xushichen/UdeskSDK.git', :tag => spec.version.to_s }
-  spec.source_files = 'UdeskSDK/UDChatMessage/**/*.{h,m}','UdeskSDK/SDK/*.{h}'
+  spec.source_files = 'UdeskSDK/SDK/*.{h}','UdeskSDK/UDChatMessage/**/*.{h,m}'
   spec.platform     = :ios, '6.0'
   spec.requires_arc = true
   spec.frameworks = 'AVFoundation', 'CoreTelephony', 'SystemConfiguration', 'MobileCoreServices'
