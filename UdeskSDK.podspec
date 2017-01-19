@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |spec|
   spec.name         = 'UdeskSDK'
-  spec.version      = '3.5.2'
+  spec.version      = '3.5.3'
   spec.license      = 'MIT'
   spec.summary      = 'Udesk SDK for iOS'
   spec.homepage     = 'https://github.com/xushichen/UdeskSDK'

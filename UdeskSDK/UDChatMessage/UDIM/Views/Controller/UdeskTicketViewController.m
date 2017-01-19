@@ -14,7 +14,6 @@
 #import "UdeskSDKConfig.h"
 #import "UdeskTransitioningAnimation.h"
 #import "UdeskLanguageTool.h"
-#import "UDStatus.h"
 
 @interface UdeskTicketViewController () 
 
@@ -56,30 +55,24 @@
         _ticketWebView = [[UIWebView alloc] initWithFrame:webViewRect];
         _ticketWebView.backgroundColor = [UIColor whiteColor];
 
-        NSURL *ticketURL = nil;
-        if (_sdkConfig.url) {
-            ticketURL = [NSURL URLWithString:_sdkConfig.url];
-        }else{
-            ticketURL =  [UdeskManager getSubmitTicketURL];
-           // 设置语言
-            NSString *tmp = [[NSUserDefaults standardUserDefaults] objectForKey:LANGUAGE_SET];
-           // 默认是中文
-            if (!tmp)
-            {
-                tmp = CNS;
-            }
-    
-            NSString *language;
-            if ([tmp isEqualToString:CNS]) {
-                language = @"&language=zh-cn";
-            }
-            else {
-                language = @"&language=en-us";
-            }
-            
-            ticketURL = [NSURL URLWithString:[ticketURL.absoluteString stringByAppendingString:language]];
+        NSURL *ticketURL =  [UdeskManager getSubmitTicketURL];
+        // 设置语言
+        NSString *tmp = [[NSUserDefaults standardUserDefaults] objectForKey:LANGUAGE_SET];
+        // 默认是中文
+        if (!tmp)
+        {
+            tmp = CNS;
         }
-
+        
+        NSString *language;
+        if ([tmp isEqualToString:CNS]) {
+            language = @"&language=zh-cn";
+        }
+        else {
+            language = @"&language=en-us";
+        }
+        
+        ticketURL = [NSURL URLWithString:[ticketURL.absoluteString stringByAppendingString:language]];
 
         [_ticketWebView loadRequest:[NSURLRequest requestWithURL:ticketURL]];
         

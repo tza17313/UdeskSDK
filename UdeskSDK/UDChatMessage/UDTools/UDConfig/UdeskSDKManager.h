@@ -8,6 +8,10 @@
 
 #import <Foundation/Foundation.h>
 #import "UdeskSDKConfig.h"
+#import "UdeskManager.h"
+
+//留言表单点击通知
+#define UdeskClickSendFormButton              @"UdeskClickSendFormButton"
 
 typedef enum : NSUInteger {
     UdeskFAQ,
@@ -16,16 +20,6 @@ typedef enum : NSUInteger {
     UdeskMenu,
     UdeskTicket
 } UdeskType;
-
-// 排队放弃类型枚举
-typedef NS_ENUM(NSUInteger, Quit_queueType) {
-    /** 客服拉取时,如果客户不在线,从排列中清除 */
-    UdeskCannel_mark,
-    /** 直接从排列中清除 */ 
-    UdeskForce_quit,
-    /** 放弃排队，不接如进去 */
-    UdeskMark
-};
 
 @interface UdeskSDKManager : NSObject
 
@@ -70,6 +64,13 @@ typedef NS_ENUM(NSUInteger, Quit_queueType) {
  */
 - (void)presentUdeskViewControllerWith:(UIViewController *)viewController
                             completion:(void (^)(void))completion;
+
+/**
+ 设置自定义留言表单
+
+ @param isCustom
+ */
+- (void)setCustomForm:(BOOL)isCustom;
 
 /**
  *  设置分配给指定的客服id
@@ -151,11 +152,6 @@ typedef NS_ENUM(NSUInteger, Quit_queueType) {
  *
  */
 - (void)setTransferToAgentMenu:(BOOL)toMenu;
-/**
- *  设置自定义留言URL
- *
- */
-- (void)setTicketUrl:(NSString *)url;
 
 /**
  * 设置组名
@@ -165,8 +161,7 @@ typedef NS_ENUM(NSUInteger, Quit_queueType) {
 /**
  * 设置排队放弃类型
  */
-- (void)setQuitQueueType:(Quit_queueType)type;
+- (void)setQuitQueueType:(UDQuitQueueType)type;
 
-+ (void)delUserDef;
 
 @end

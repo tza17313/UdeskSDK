@@ -16,7 +16,8 @@
 #import "UdeskUtils.h"
 #import "UdeskLanguageTool.h"
 #import "UdeskSDKManager.h"
-#import "UDStatus.h"
+#import "UdeskSDKShow.h"
+#import "UdeskAgentMenuViewController.h"
 
 @interface UdeskRobotViewController ()
 
@@ -41,10 +42,8 @@
         
         if (success) {
     
-            if (self.status) {
-                if ([UDStatus shareInstance].enable_agent) {
-
-                }else{
+            if (self.sdkSetting) {
+                if (!self.sdkSetting.enableAgent.boolValue) {
                     self.navigationItem.rightBarButtonItems = nil;
                 }
             }else{
@@ -52,7 +51,6 @@
                 if (![UdeskManager supportTransfer]) {
                     self.navigationItem.rightBarButtonItems = nil;
                 }
-
             }
 
 
@@ -85,17 +83,19 @@
 //黑名单
 - (void)showIsBlacklistedAlert {
     
-    UdeskAlertController *blacklisted = [UdeskAlertController alertWithTitle:nil message:getUDLocalizedString(@"udesk_alert_view_blocked_list")];
+    UdeskAlertController *blacklisted = [UdeskAlertController alertControllerWithTitle:nil message:getUDLocalizedString(@"udesk_alert_view_blocked_list") preferredStyle:UDAlertControllerStyleAlert];
     
     @udWeakify(self);
-    [blacklisted addAction:[UdeskAlertAction actionWithTitle:getUDLocalizedString(@"udesk_sure") handler:^(UdeskAlertAction * _Nonnull action) {
+    [blacklisted addAction:[UdeskAlertAction actionWithTitle:getUDLocalizedString(@"udesk_sure") style:UDAlertActionStyleDefault handler:^(UdeskAlertAction * _Nonnull action) {
         @udStrongify(self);
         [self dismissChatViewController];
     }]];
     
-    [blacklisted addCloseActionWithTitle:getUDLocalizedString(@"udesk_close") Handler:nil];
+    [blacklisted addAction:[UdeskAlertAction actionWithTitle:getUDLocalizedString(@"udesk_close") style:UDAlertActionStyleDefault handler:^(UdeskAlertAction * _Nonnull action) {
+        
+    }]];
     
-    [blacklisted showWithSender:nil controller:nil animated:YES completion:NULL];
+    [self presentViewController:blacklisted animated:YES completion:nil];
 }
 
 - (void)dealloc
@@ -136,23 +136,60 @@
     return self;
 }
 
+- (instancetype)initWithSDKConfig:(UdeskSDKConfig *)config
+                          withURL:(NSURL *)URL
+                      withSetting:(UdeskSetting *)setting {
+
+    _sdkSetting = setting;
+    return [self initWithSDKConfig:config withURL:URL];
+}
+
 - (void)didSelectNavigationRightButton {
     
+    if (self.sdkSetting) {
 
-    if (self.status) {
-
-        if ([UDStatus shareInstance].enable_im_group) {
+        UdeskSDKShow *show = [[UdeskSDKShow alloc] initWithConfig:self.sdkConfig];
+        
+        if (self.sdkSetting.enableImGroup) {
             
-            UdeskSDKManager *sdk = [[UdeskSDKManager alloc] initWithSDKStyle:_sdkConfig.sdkStyle];
-            [sdk pushUdeskViewControllerWithType:UdeskMenu viewController:self completion:nil];
-        }else{
-            UdeskSDKManager *chatViewManager = [[UdeskSDKManager alloc] initWithSDKStyle:_sdkConfig.sdkStyle];
-            [chatViewManager pushUdeskViewControllerWithType:UdeskIM viewController:self completion:^{
+            //查看是否有导航栏
+            [UdeskManager getAgentNavigationMenu:^(id responseObject, NSError *error) {
+                
+                //查看导航栏错误，直接进入聊天页面
+                if (error) {
+                    UdeskChatViewController *chat = [[UdeskChatViewController alloc] initWithSDKConfig:self.sdkConfig withSettings:self.sdkSetting];
+                    [show presentOnViewController:self udeskViewController:chat transiteAnimation:UDTransiteAnimationTypePush completion:nil];
+                    
+                    return ;
+                }
+                
+                if ([[responseObject objectForKey:@"code"] integerValue] == 1000) {
+                    
+                    NSArray *result = [responseObject objectForKey:@"result"];
+                    //有设置客服导航栏
+                    if (result.count) {
+                        //如果后台有配置
+                        UdeskAgentMenuViewController *agentMenu = [[UdeskAgentMenuViewController alloc] initWithSDKConfig:_sdkConfig menuArray:result withSetting:self.sdkSetting];
+                        
+                        [show presentOnViewController:self udeskViewController:agentMenu transiteAnimation:UDTransiteAnimationTypePush completion:nil];
+                    }
+                    else {
+                        //没有设置导航栏 直接进入聊天页面
+                        UdeskChatViewController *chat = [[UdeskChatViewController alloc] initWithSDKConfig:self.sdkConfig withSettings:self.sdkSetting];
+                        [show presentOnViewController:self udeskViewController:chat transiteAnimation:UDTransiteAnimationTypePush completion:nil];
+                    }
+                }
+                
             }];
+
+        }else{
+            
+            UdeskChatViewController *chat = [[UdeskChatViewController alloc] initWithSDKConfig:self.sdkConfig withSettings:self.sdkSetting];
+            [show presentOnViewController:self udeskViewController:chat transiteAnimation:UDTransiteAnimationTypePush completion:nil];
         }
 
-
     }else{
+        
         if (_sdkConfig.transferToMenu) {
             UdeskSDKManager *sdk = [[UdeskSDKManager alloc] initWithSDKStyle:_sdkConfig.sdkStyle];
             [sdk pushUdeskViewControllerWithType:UdeskMenu viewController:self completion:nil];

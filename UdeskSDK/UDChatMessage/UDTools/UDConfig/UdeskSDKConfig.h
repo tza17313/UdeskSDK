@@ -9,6 +9,7 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 #import "UdeskSDKStyle.h"
+#import "UdeskManager.h"
 
 /*
  显示聊天窗口的动画
@@ -26,9 +27,6 @@ typedef NS_ENUM(NSUInteger, UDTransiteAnimationType) {
 
 /** 组来源 */
 @property (nonatomic, copy) NSString *name;
-
-/** im标题 */
-@property (nonatomic, copy  ) NSString *url;
 /** im标题 */
 @property (nonatomic, copy  ) NSString *imTitle;
 
@@ -73,6 +71,12 @@ typedef NS_ENUM(NSUInteger, UDTransiteAnimationType) {
 
 /** 页面弹出方式 */
 @property (nonatomic, assign) UDTransiteAnimationType presentingAnimation;
+
+/** 放弃排队方式 */
+@property (nonatomic, assign) UDQuitQueueType quitQueueType;
+
+/** 用户自定义留言 */
+@property (nonatomic, assign) BOOL isCustomForm;
 
 /** 超链接正则 */
 @property (nonatomic, copy, readonly) NSMutableArray *linkRegexs;

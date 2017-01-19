@@ -25,7 +25,6 @@
 #import "UdeskAudioPlayerHelper.h"
 #import "UdeskPhotoManeger.h"
 #import "UdeskManager.h"
-#import "UdeskAgent.h"
 #import "UdeskChatCell.h"
 #import "UdeskChatMessage.h"
 #import "UdeskMessage+UdeskChatMessage.h"
@@ -42,10 +41,9 @@
 #import "UdeskSDKShow.h"
 #import "UdeskBaseMessage.h"
 #import "UdeskSDKManager.h"
-#import "ZKAlertController.h"
-#import "UDStatus.h"
+#import "UdeskSetting.h"
 
-@interface UdeskChatViewController ()<UDEmotionManagerViewDelegate,UITableViewDelegate,UITableViewDataSource,UdeskChatViewModelDelegate,UdeskInputBarDelegate,UdeskVoiceRecordViewDelegate,UdeskCellDelegate,UIAlertViewDelegate>
+@interface UdeskChatViewController ()<UIGestureRecognizerDelegate,UDEmotionManagerViewDelegate,UITableViewDelegate,UITableViewDataSource,UdeskChatViewModelDelegate,UdeskInputBarDelegate,UdeskVoiceRecordViewDelegate,UdeskCellDelegate>
 
 @property (nonatomic, assign) UDInputViewType           textViewInputViewType;//输入消息类型
 @property (nonatomic, assign) BOOL                      isMaxTimeStop;//判断是不是超出了录音最大时长
@@ -53,10 +51,11 @@
 @property (nonatomic, strong) UdeskEmotionManagerView   *emotionManagerView;//管理表情的控件
 @property (nonatomic, strong) UdeskVoiceRecordHUD       *voiceRecordHUD;//语音录制动画
 @property (nonatomic, strong) UdeskPhotographyHelper    *photographyHelper;//管理本机的摄像和图片库的工具对象
-@property (nonatomic, strong) UdeskVoiceRecordView    *voiceRecordView;//管理本机的摄像和图片库的工具对象
+@property (nonatomic, strong) UdeskVoiceRecordView      *voiceRecordView;//管理本机的摄像和图片库的工具对象
 @property (nonatomic, strong) UdeskChatViewModel        *chatViewModel;//viewModel
 @property (nonatomic, strong) UdeskInputBar     *inputBar;//用于显示发送消息类型控制的工具条，在底部
-@property (nonatomic, strong) UdeskSDKConfig     *sdkConfig;//用于显示发送消息类型控制的工具条，在底部
+@property (nonatomic, strong) UdeskSDKConfig     *sdkConfig;//sdk配置
+@property (nonatomic, strong) UdeskSetting       *sdkSetting;//sdk后台配置
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 @property (nonatomic, strong) UIAlertView *tickAlert;
@@ -64,6 +63,13 @@
 @end
 
 @implementation UdeskChatViewController
+
+- (instancetype)initWithSDKConfig:(UdeskSDKConfig *)config
+                     withSettings:(UdeskSetting *)setting {
+    
+    _sdkSetting = setting;
+    return [self initWithSDKConfig:config];
+}
 
 - (instancetype)initWithSDKConfig:(UdeskSDKConfig *)config {
     if (self = [super init]) {
@@ -73,73 +79,73 @@
         
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(resendClickFailedMessage:) name:UdeskClickResendMessage object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(sendProductMessageURL:) name:UdeskTouchProductUrlSendButton object:nil];
-
-         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(showNotInworkTime) name:@"showNotInworkTime" object:nil];
-
-
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(enable_web_im_feedback) name:@"showAgentNotOnlineAlert" object:nil];
-        
-
     }
     return  self;
 }
 
 - (void)setupBase {
 
+    if ([self respondsToSelector:@selector(automaticallyAdjustsScrollViewInsets)]) {
+        self.automaticallyAdjustsScrollViewInsets = NO;
+    }
+    
+    if( ([[[UIDevice currentDevice] systemVersion] doubleValue]>=7.0)) {
+        self.navigationController.navigationBar.translucent = NO;
+    }
+    
     self.navigationItem.title = getUDLocalizedString(@"udesk_connecting_agent");
     //设置返回按钮文字
     UIBarButtonItem *barButtonItem = [[UIBarButtonItem alloc] init];
     barButtonItem.title = getUDLocalizedString(@"udesk_back");
     self.navigationItem.backBarButtonItem = barButtonItem;
-
+    
+    UIScreenEdgePanGestureRecognizer *popRecognizer = [[UIScreenEdgePanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePopRecognizer:)];
+    popRecognizer.edges = UIRectEdgeLeft;
+    [self.view addGestureRecognizer:popRecognizer];
 }
 
-- (void)showNotInworkTime
-{
-
-    if (![UDStatus shareInstance].enable_web_im_feedback) {
-        NSString *str = [UDStatus shareInstance].no_reply_hint;
-        if (!str.length) {
-            str = @"当前无客服在线，请在工作时间联系客服";//getUDLocalizedString(@"udesk_alert_view_leave_msg");;
-            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:nil message:str delegate:self cancelButtonTitle:@"取消" otherButtonTitles:nil];
-            alert.delegate = self;
-            [alert show];
-            return;
+//滑动返回
+- (void)handlePopRecognizer:(UIScreenEdgePanGestureRecognizer*)recognizer {
+    //隐藏键盘
+    [self.inputBar.inputTextView resignFirstResponder];
+    CGPoint translation = [recognizer translationInView:self.view];
+    CGFloat xPercent = translation.x / CGRectGetWidth(self.view.bounds) * 0.9;
+    
+    switch (recognizer.state) {
+        case UIGestureRecognizerStateBegan:
+            [UdeskTransitioningAnimation setInteractive:YES];
+            [self dismissViewControllerAnimated:YES completion:nil];
+            break;
+        case UIGestureRecognizerStateChanged:
+            [UdeskTransitioningAnimation updateInteractiveTransition:xPercent];
+            break;
+        default:
+            if (xPercent < .45) {
+                [UdeskTransitioningAnimation cancelInteractiveTransition];
+            } else {
+                [UdeskTransitioningAnimation finishInteractiveTransition];
+            }
+            [UdeskTransitioningAnimation setInteractive:NO];
+            break;
+    }
+    
+}
+//点击返回
+- (void)dismissChatViewController {
+    //隐藏键盘
+    [self.inputBar.inputTextView resignFirstResponder];
+    if (self.sdkConfig.presentingAnimation == UDTransiteAnimationTypePush) {
+        if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 7) {
+            [self dismissViewControllerAnimated:YES completion:nil];
+        } else {
+            [self.view.window.layer addAnimation:[UdeskTransitioningAnimation createDismissingTransiteAnimation:self.sdkConfig.presentingAnimation] forKey:nil];
+            [self dismissViewControllerAnimated:NO completion:nil];
         }
-
-        NSLog(@"%@",str);
-#pragma clang diagnostic pop
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
-        ZKAlertController *alert = [ZKAlertController alertControllerWithTitle:nil message:NSLocalizedString(str, nil) preferredStyle:ZKAlertControllerStyleAlert];
-
-        ZKAlertAction *cancel = [ZKAlertAction actionWithTitle:NSLocalizedString(@"确定", nil) style:ZKAlertActionStyleCancel handler:nil];
-
-        [alert addAction:cancel];
-        [self presentViewController:alert animated:YES completion:nil];
-        
-#pragma clang diagnostic pop
-        return;
+    } else {
+        [self dismissViewControllerAnimated:YES completion:nil];
     }
-
-    if (![UDStatus shareInstance].is_worktime) {
-        [self enable_web_im_feedback];
-        return;
-    }
-
-    NSString *str = [UDStatus shareInstance].no_reply_hint;
-    if (!str.length) {
-         str = @"您可以选择提交表单来描述您的问题，稍后我们会和您联系";//getUDLocalizedString(@"udesk_alert_view_leave_msg");;
-    }
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"当前客服不在线" message:str delegate:self cancelButtonTitle:@"取消" otherButtonTitles:@"留言", nil];
-    alert.delegate = self;
-    [alert show];
-
 }
+
 - (void)viewDidLoad {
 
     [super viewDidLoad];
@@ -150,22 +156,6 @@
     [self initViewModel];
     //初始化消息页面布局
     [self initilzer];
-    // 后台设置的方法
-
-    if (![UDStatus shareInstance]) {
-        
-         [self.chatViewModel createCustomer];
-
-    }else{
-        if ([UDStatus shareInstance].is_worktime) {
-
-            [self.chatViewModel createCustomer];
-        }
-        else {
-            [self enable_web_im_feedback];
-        }
-    }
-
 }
 
 #pragma mark - 初始化viewModel
@@ -173,6 +163,7 @@
     
     self.chatViewModel = [[UdeskChatViewModel alloc] init];
     self.chatViewModel.delegate = self;
+    [self.chatViewModel createCustomerWithSDKSetting:self.sdkSetting];
 }
 
 #pragma mark - UdeskChatViewModelDelegate
@@ -182,7 +173,6 @@
     @udWeakify(self);
     //更新消息内容
     dispatch_async(dispatch_get_main_queue(), ^{
-        
         @udStrongify(self);
         [self.messageTableView reloadData];
     });
@@ -209,85 +199,12 @@
     }
 }
 
-- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
-{
-        if (buttonIndex == 1) {
-            UdeskSDKManager *chatViewManager = [[UdeskSDKManager alloc] initWithSDKStyle:[UdeskSDKStyle defaultStyle]];
-            if (_sdkConfig.url) {
-
-                [chatViewManager setTicketUrl:_sdkConfig.url];
-            }
-            [chatViewManager pushUdeskViewControllerWithType:UdeskTicket viewController:self completion:nil];
-        }
-}
-
-- (void)enable_web_im_feedback
-{
-    if ([UDStatus shareInstance].enable_web_im_feedback) {
-
-        self.navigationItem.title = getUDLocalizedString(@"udesk_agent_offline");
-
-        NSString *str = [UDStatus shareInstance].no_reply_hint;
-        if (!str.length) {
-            str = @"您可以选择提交表单来描述您的问题，稍后我们会和您联系";//getUDLocalizedString(@"udesk_alert_view_leave_msg");;
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"当前客服不在线" message:str delegate:self cancelButtonTitle:@"取消" otherButtonTitles:@"留言", nil];
-            alert.delegate = self;
-            [alert show];
-            self.tickAlert = alert;
-            return;
-        }
-        
-        ZKAlertController *alert = [ZKAlertController alertControllerWithTitle:nil message:NSLocalizedString(str, nil) preferredStyle:ZKAlertControllerStyleAlert];
-
-        ZKAlertAction *cancel = [ZKAlertAction actionWithTitle:NSLocalizedString(@"确定", nil) style:ZKAlertActionStyleCancel handler:nil];
-
-        [alert addAction:cancel];
-        [self presentViewController:alert animated:YES completion:nil];
-
-
-    } else {
-
-        self.navigationItem.title = getUDLocalizedString(@"udesk_agent_offline");
-
-        NSString *str = [UDStatus shareInstance].no_reply_hint;
-        if (!str.length) {
-            str = @"当前无客服在线，请在工作时间联系客服";//getUDLocalizedString(@"udesk_alert_view_leave_msg");;
-            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:nil message:str delegate:self cancelButtonTitle:@"取消" otherButtonTitles:nil];
-            alert.delegate = self;
-            [alert show];
-            return;
-        }
-
-        NSLog(@"%@",str);
-#pragma clang diagnostic pop
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
-        ZKAlertController *alert = [ZKAlertController alertControllerWithTitle:nil message:NSLocalizedString(str, nil) preferredStyle:ZKAlertControllerStyleAlert];
-
-        ZKAlertAction *cancel = [ZKAlertAction actionWithTitle:NSLocalizedString(@"确定", nil) style:ZKAlertActionStyleCancel handler:nil];
-
-        [alert addAction:cancel];
-        [self presentViewController:alert animated:YES completion:nil];
-
-#pragma clang diagnostic pop
-    }
-}
-
 //更新客服信息
 - (void)didFetchAgentModel:(UdeskAgent *)agent {
     
     if (agent.code) {
         [self setNavigationTitle:agent];
     }
-
-//    if (agent.code == UDAgentStatusResultOffline) {
-//        [self enable_web_im_feedback];
-//    }
-
 }
 
 - (void)didSurveyCompletion:(NSString *)message {
@@ -314,10 +231,6 @@
     }
     else if (agent.code == UDAgentStatusResultQueue) {
         titleText = agent.message; //getUDLocalizedString(@"udesk_agent_busy");
-
-        [[NSUserDefaults standardUserDefaults] setObject:agent.message forKey:@"agentMessage"];
-        [[NSUserDefaults standardUserDefaults] synchronize];
-        
     }
     else {
         titleText = agent.message;
@@ -365,6 +278,13 @@
 //点击发送留言
 - (void)didSelectSendTicket {
 
+    self.chatViewModel.isNotShowAlert = YES;
+    
+    if (self.sdkConfig.isCustomForm) {
+        [[NSNotificationCenter defaultCenter] postNotificationName:UdeskClickSendFormButton object:self];
+        return ;
+    }
+    
     UdeskTicketViewController *offLineTicket = [[UdeskTicketViewController alloc] init];
     UdeskSDKShow *show = [[UdeskSDKShow alloc] initWithConfig:_sdkConfig];
     [show presentOnViewController:self udeskViewController:offLineTicket transiteAnimation:UDTransiteAnimationTypePush completion:nil];
@@ -373,6 +293,7 @@
 //点击黑名单弹窗提示的确定
 - (void)didSelectBlacklistedAlertViewOkButton {
 
+    self.chatViewModel.isNotShowAlert = YES;
     [self.navigationController popViewControllerAnimated:YES];
 }
 
@@ -643,7 +564,6 @@
     
     //根据textViewInputViewType切换功能面板
     [self.inputBar.inputTextView resignFirstResponder];
-    
     [UIView animateWithDuration:0.25 delay:0 options:UIViewAnimationOptionCurveEaseInOut animations:^{
         __block CGRect inputViewFrame = self.inputBar.frame;
         __block CGRect otherMenuViewFrame;
@@ -870,13 +790,8 @@
 #pragma mark - 监听键盘通知做出相应的操作
 - (void)subscribeToKeyboard {
 
-
     @udWeakify(self);
     [self ud_subscribeKeyboardWithBeforeAnimations:nil animations:^(CGRect keyboardRect, NSTimeInterval duration, BOOL isShowing) {
-
-      //  NSLog(@"==== %@",NSStringFromCGRect(self.messageTableView.frame));
-        self.messageTableView.frame = CGRectMake(0, 64, UD_SCREEN_WIDTH, UD_SCREEN_HEIGHT-64);
-      //  NSLog(@"==== %@",NSStringFromCGRect(self.messageTableView.frame));
 
         @udStrongify(self);
         if (self.textViewInputViewType == UDInputViewTypeText) {
@@ -927,42 +842,28 @@
     
     // remove键盘通知或者手势
     [self ud_unsubscribeKeyboard];
-    
     // 停止播放语音
     [[UdeskAudioPlayerHelper shareInstance] stopAudio];
-
+    
+    self.chatViewModel.isNotShowAlert = YES;
 }
 
 - (void)viewDidDisappear:(BOOL)animated
 {
     [super viewDidDisappear:animated];
-
-    // 离队
-    [[UDStatus shareInstance] quiteQueue:^(NSInteger type, UDStatus *status) {
-        if (type) {
-           // NSLog(@"success");
-        }
-    }];
-
-    // 移除上次的选择
-  //  [UdeskSDKManager delUserDef];
-
+    //离开页面放弃排队
+    [UdeskManager quitQueueWithType:_sdkConfig.quitQueueType];
+    //取消所有请求
+    [UdeskManager ud_cancelAllOperations];
 }
 
 - (void)dealloc {
     
     NSLog(@"%@销毁了",[self class]);
-    //取消所有请求
-    [UdeskManager ud_cancelAllOperations];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:UdeskClickResendMessage object:nil];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:UdeskTouchProductUrlSendButton object:nil];
     _messageTableView.delegate = nil;
     _messageTableView.dataSource = nil;
-
-
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:@"showAgentNotOnlineAlert" object:nil];
-
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:@"showNotInworkTime" object:nil];
 }
 
 @end

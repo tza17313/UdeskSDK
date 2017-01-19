@@ -24,7 +24,6 @@
 
     // 1.添加左滑返回手势
     [self addGesture];
-
 }
 
 - (void)setupBase
@@ -92,9 +91,5 @@
 
 }
 
-- (void)dealloc
-{
-    NSLog(@"%@销毁了",[self class]);
-}
 
 @end
