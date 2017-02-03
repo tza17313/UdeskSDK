@@ -14,14 +14,14 @@
 NSString* getUDBundlePath( NSString * filename)
 {
     
-    NSBundle * libBundle = UDBUNDLE ;
+    NSBundle * libBundle = [NSBundle bundleWithPath:[[NSBundle bundleForClass:[UdeskLanguageTool class]] pathForResource:@"UdeskBundle" ofType:@"bundle"]];
     
     if ( libBundle && filename ){
         
         NSString * s=[[libBundle resourcePath] stringByAppendingPathComponent : filename];
         
+        NSLog(@"%@",s);
         return s;
-        
     }
     
     return nil ;

@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |spec|
   spec.name         = 'UdeskSDK'
-  spec.version      = '3.5.3'
+  spec.version      = '3.5.4'
   spec.license      = 'MIT'
   spec.summary      = 'Udesk SDK for iOS'
   spec.homepage     = 'https://github.com/xushichen/UdeskSDK'
@@ -23,4 +23,5 @@ Pod::Spec.new do |spec|
   spec.vendored_libraries = 'UdeskSDK/SDK/libUdesk.a'
   spec.xcconfig     = {'OTHER_LDFLAGS' => '-ObjC',
                        'HEADER_SEARCH_PATHS' => '$(SDKROOT)/usr/include/libxml2'}
+
 end
