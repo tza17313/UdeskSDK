@@ -60,7 +60,7 @@ static UdeskLanguageTool *sharedModel;
     NSBundle *bundle = [NSBundle bundleWithPath:path];
     
     path = [bundle pathForResource:self.language ofType:@"lproj"];
-    NSLog(@"%@",path);
+    
     self.bundle = [NSBundle bundleWithPath:path];
 }
 

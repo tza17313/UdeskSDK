@@ -20,7 +20,6 @@ NSString* getUDBundlePath( NSString * filename)
         
         NSString * s=[[libBundle resourcePath] stringByAppendingPathComponent : filename];
         
-        NSLog(@"%@",s);
         return s;
     }
     
