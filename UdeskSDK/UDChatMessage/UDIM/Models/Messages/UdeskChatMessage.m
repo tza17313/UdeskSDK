@@ -745,8 +745,8 @@ static const CGFloat kUDAnimationVoiceImageViewHeight    = 17.0f;
         return;
     }
     
-//    text = [text stringByReplacingOccurrencesOfString:@"\\" withString:@""];
-//    text = [text stringByReplacingOccurrencesOfString:@"/" withString:@""];
+    text = [text stringByReplacingOccurrencesOfString:@"\\" withString:@""];
+    text = [text stringByReplacingOccurrencesOfString:@"/" withString:@""];
     
     NSMutableParagraphStyle *contentParagraphStyle = [[NSMutableParagraphStyle alloc] init];
     contentParagraphStyle.lineSpacing = 6.0f;
