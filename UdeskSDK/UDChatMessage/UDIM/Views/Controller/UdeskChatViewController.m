@@ -109,7 +109,9 @@
     switch (recognizer.state) {
         case UIGestureRecognizerStateBegan:
             [UdeskTransitioningAnimation setInteractive:YES];
-            [self dismissViewControllerAnimated:YES completion:nil];
+            [self dismissViewControllerAnimated:YES completion:^{
+                [UIApplication sharedApplication].statusBarStyle = UIStatusBarStyleLightContent;
+            }];
             break;
         case UIGestureRecognizerStateChanged:
             [UdeskTransitioningAnimation updateInteractiveTransition:xPercent];
@@ -131,13 +133,19 @@
     [self.inputBar.inputTextView resignFirstResponder];
     if (self.sdkConfig.presentingAnimation == UDTransiteAnimationTypePush) {
         if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 7) {
-            [self dismissViewControllerAnimated:YES completion:nil];
+            [self dismissViewControllerAnimated:YES completion:^{
+                 [UIApplication sharedApplication].statusBarStyle = UIStatusBarStyleLightContent;
+            }];
         } else {
             [self.view.window.layer addAnimation:[UdeskTransitioningAnimation createDismissingTransiteAnimation:self.sdkConfig.presentingAnimation] forKey:nil];
-            [self dismissViewControllerAnimated:NO completion:nil];
+            [self dismissViewControllerAnimated:NO completion:^{
+                [UIApplication sharedApplication].statusBarStyle = UIStatusBarStyleLightContent;
+            }];
         }
     } else {
-        [self dismissViewControllerAnimated:YES completion:nil];
+        [self dismissViewControllerAnimated:YES completion:^{
+            [UIApplication sharedApplication].statusBarStyle = UIStatusBarStyleLightContent;
+        }];
     }
 }
 
